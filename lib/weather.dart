@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
-import 'dart:math' as math; // ADDED: Required for geometric coordinate calculations
+import 'dart:math' as math; // Required for geometric coordinate calculations
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'main.dart'; // Imports your global themeProvider flag
@@ -40,10 +40,8 @@ class ClearIconPainter extends CustomPainter {
     final radius = size.width / 4;
     canvas.drawCircle(center, radius, paint);
 
-    // Draw solar coordinate ray ticks
     for (int i = 0; i < 8; i++) {
       final angle = (i * 45) * 3.14159 / 180;
-      // FIXED: Added math. prefix to trigonometric functions
       final start = Offset(center.dx + (radius + 4) * math.cos(angle), center.dy + (radius + 4) * math.sin(angle));
       final end = Offset(center.dx + (radius + 10) * math.cos(angle), center.dy + (radius + 10) * math.sin(angle));
       canvas.drawLine(start, end, paint);
@@ -68,7 +66,6 @@ class CloudyIconPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Brutalist segmented cloud lines
     canvas.drawLine(Offset(w * 0.25, h * 0.65), Offset(w * 0.75, h * 0.65), paint);
     canvas.drawArc(Rect.fromLTWH(w * 0.25, h * 0.4, w * 0.25, h * 0.3), 3.14, 1.8, false, paint);
     canvas.drawArc(Rect.fromLTWH(w * 0.4, h * 0.3, w * 0.3, h * 0.35), 3.4, 2.0, false, paint);
@@ -93,12 +90,10 @@ class RainyIconPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Draw core base cloud
     canvas.drawLine(Offset(w * 0.25, h * 0.55), Offset(w * 0.75, h * 0.55), paint);
     canvas.drawArc(Rect.fromLTWH(w * 0.25, h * 0.35, w * 0.25, h * 0.25), 3.14, 1.8, false, paint);
     canvas.drawArc(Rect.fromLTWH(w * 0.4, h * 0.25, w * 0.3, h * 0.3), 3.4, 2.0, false, paint);
 
-    // Linear brutalist raindrops
     canvas.drawLine(Offset(w * 0.35, h * 0.65), Offset(w * 0.3, h * 0.75), paint);
     canvas.drawLine(Offset(w * 0.5, h * 0.65), Offset(w * 0.45, h * 0.75), paint);
     canvas.drawLine(Offset(w * 0.65, h * 0.65), Offset(w * 0.6, h * 0.75), paint);
@@ -167,7 +162,6 @@ class HourlyChartPainter extends CustomPainter {
     final double tempRange = maxTemp - minTemp;
     final double segmentWidth = size.width / (temperatures.length - 1);
 
-    // Render underlying brutalist tracking horizontal baseline grid meshes
     for (int i = 0; i <= 4; i++) {
       final double y = size.height * (i / 4);
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
@@ -185,11 +179,9 @@ class HourlyChartPainter extends CustomPainter {
         path.lineTo(x, y);
       }
 
-      // Render structural tick point node coordinate boundaries
       if (i % 4 == 0 || i == temperatures.length - 1) {
         canvas.drawRect(Rect.fromCenter(center: Offset(x, y), width: 3, height: 3), Paint()..color = theme.accentCrimson);
 
-        // Dynamic node metric text data labels (Sans-Serif Forced)
         final textPainter = TextPainter(
           text: TextSpan(
             text: '${temperatures[i].toStringAsFixed(1)}°',
@@ -207,7 +199,7 @@ class HourlyChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// --- 4. ENGINE CONTROLLER SYSTEM ---
+// --- 4. ENGINE CONTROLLER LOGIC HUB ---
 class WeatherScreen extends ConsumerStatefulWidget {
   const WeatherScreen({super.key});
 
@@ -218,7 +210,7 @@ class WeatherScreen extends ConsumerStatefulWidget {
 class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   bool _isLoading = true;
   String? _errorMessage;
-  Map<String, dynamic>? _weatherData;
+  Map<String, dynamic>? _telemetryData;
 
   @override
   void initState() {
@@ -232,23 +224,34 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       _errorMessage = null;
     });
 
+    final HttpClient client = HttpClient();
+    client.connectionTimeout = const Duration(seconds: 10);
+
     try {
-      final client = HttpClient();
-      const url = 'https://api.open-meteo.com/v1/forecast?latitude=19.0728&longitude=72.8826&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,rain,visibility,cloud_cover_low,cloud_cover_mid,cloud_cover_high,is_day,sunshine_duration,wind_direction_180m,wind_speed_180m&current=temperature_2m,relative_humidity_2m,rain,is_day,apparent_temperature&past_days=3&forecast_days=3';
+      const String url = 'https://api.open-meteo.com/v1/forecast?'
+          'latitude=19.0728&longitude=72.8826'
+          '&current=temperature_2m,relative_humidity_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m'
+          '&hourly=temperature_2m'
+          '&daily=temperature_2m_max,temperature_2m_min,weather_code'
+          '&past_days=3'
+          '&forecast_days=3'
+          '&timezone=auto';
 
       final request = await client.getUrl(Uri.parse(url));
       final response = await request.close();
 
       if (response.statusCode == 200) {
         final responseBody = await response.transform(utf8.decoder).join();
+        final Map<String, dynamic> data = json.decode(responseBody);
+
         if (mounted) {
           setState(() {
-            _weatherData = json.decode(responseBody);
+            _telemetryData = data;
             _isLoading = false;
           });
         }
       } else {
-        throw HttpException('SYSTEM ERROR PORT CODE: ${response.statusCode}');
+        throw HttpException('SERVER REJECTED DATALINK TERMINAL WITH STATUS: ${response.statusCode}');
       }
     } catch (e) {
       if (mounted) {
@@ -257,6 +260,8 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           _isLoading = false;
         });
       }
+    } finally {
+      client.close();
     }
   }
 
@@ -269,14 +274,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       backgroundColor: theme.canvasBg,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // TOP GLOBAL TRACKBAR BANNER
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               decoration: BoxDecoration(
                 border: Border(bottom: BorderSide(color: theme.ruleBorder, width: 0.8)),
-                color: theme.panelBg,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -285,7 +288,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'WEATHER TELEMETRY SYSTEM',
+                        'METEOROLOGICAL TELEMETRY SYSTEM',
                         style: TextStyle(
                           color: theme.textMain,
                           fontSize: 11,
@@ -325,8 +328,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                 ],
               ),
             ),
-
-            // SYSTEM METRICS CONTROLLER DISPATCHER VIEW
             Expanded(
               child: _isLoading
                   ? Center(
@@ -364,47 +365,36 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   }
 
   Widget _buildSystemTelemetryDashboard(WeatherUiTheme theme) {
-    final current = _weatherData!['current'];
-    final hourly = _weatherData!['hourly'];
-    final daily = _weatherData!['daily'];
+    if (_telemetryData == null) return Container();
 
-    // DYNAMIC CURRENT TIME MATRIX ALIGNMENT MATCHING
-    final String? currentTimeStr = current['time'] as String?;
-    final List<dynamic> hourlyTimes = hourly['time'] ?? [];
-    int currentIndex = currentTimeStr != null ? hourlyTimes.indexOf(currentTimeStr) : -1;
-    if (currentIndex == -1) currentIndex = 0;
+    final current = _telemetryData!['current'] ?? {};
+    final hourly = _telemetryData!['hourly'] ?? {};
+    final daily = _telemetryData!['daily'] ?? {};
 
-    final double currentTemp = (current['temperature_2m'] as num?)?.toDouble() ?? 0.0;
-    final double apparentTemp = (current['apparent_temperature'] as num?)?.toDouble() ?? 0.0;
-    final int isDay = (current['is_day'] as num?)?.toInt() ?? 1;
-    final double currentRain = (current['rain'] as num?)?.toDouble() ?? 0.0;
-    final int currentHumidity = (current['relative_humidity_2m'] as num?)?.toInt() ?? 0;
+    final double currentTemp = (current['temperature_2m'] ?? 0.0).toDouble();
+    final int humidity = (current['relative_humidity_2m'] ?? 0).toInt();
+    final double windSpeed = (current['wind_speed_10m'] ?? 0.0).toDouble();
+    final int windDir = (current['wind_direction_10m'] ?? 0).toInt();
+    final int weatherCode = (current['weather_code'] ?? 0).toInt();
+    final int isDay = (current['is_day'] ?? 1).toInt();
 
-    // Resolve structural current index allocations safely
-    final int cloudCover = currentIndex < (hourly['cloud_cover_low'] as List).length
-        ? ((hourly['cloud_cover_low'][currentIndex] as num?)?.toInt() ?? 0)
-        : 0;
-    final double windSpeed = currentIndex < (hourly['wind_speed_180m'] as List).length
-        ? ((hourly['wind_speed_180m'][currentIndex] as num?)?.toDouble() ?? 0.0)
-        : 0.0;
-    final int windDir = currentIndex < (hourly['wind_direction_180m'] as List).length
-        ? ((hourly['wind_direction_180m'][currentIndex] as num?)?.toInt() ?? 0)
-        : 0;
-    final double visibility = currentIndex < (hourly['visibility'] as List).length
-        ? ((hourly['visibility'][currentIndex] as num?)?.toDouble() ?? 0.0)
-        : 0.0;
-
-    // Safe inference matching system condition structures
     String conditionSignature = 'CLEAR';
-    if (currentRain > 0) {
+    if (weatherCode >= 51) {
       conditionSignature = 'RAINY';
-    } else if (cloudCover > 50) {
+    } else if (weatherCode >= 1 && weatherCode <= 3) {
       conditionSignature = 'CLOUDY';
     } else if (isDay == 0) {
       conditionSignature = 'NIGHT';
     }
 
-    // Extract next 24 consecutive forecast segments from current pointer index
+    final List<dynamic> rawHourlyTimes = hourly['time'] ?? [];
+    final String? currentHourStr = current['time'];
+    int currentIndex = 0;
+    if (currentHourStr != null) {
+      final int idx = rawHourlyTimes.indexOf(currentHourStr);
+      if (idx != -1) currentIndex = idx;
+    }
+
     final List<double> dayHourlyChartTemps = [];
     final List<dynamic> rawHourlyTemps = hourly['temperature_2m'] ?? [];
     for (int i = 0; i < 24; i++) {
@@ -414,12 +404,24 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       }
     }
 
+    final List<dynamic> dailyTimes = daily['time'] ?? [];
+    int targetedIndexOffset = dailyTimes.length > 3 ? 3 : (dailyTimes.length - 1);
+    if (targetedIndexOffset < 0) targetedIndexOffset = 0;
+
+    String maxDayTemp = "N/A";
+    String minDayTemp = "N/A";
+    if (daily['temperature_2m_max'] != null && daily['temperature_2m_max'].length > targetedIndexOffset) {
+      maxDayTemp = daily['temperature_2m_max'][targetedIndexOffset].toString();
+    }
+    if (daily['temperature_2m_min'] != null && daily['temperature_2m_min'].length > targetedIndexOffset) {
+      minDayTemp = daily['temperature_2m_min'][targetedIndexOffset].toString();
+    }
+
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // CORE SIGNATURE MONITOR BOX
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -457,133 +459,116 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'SURFACE STATUS // $conditionSignature',
+                          conditionSignature,
                           style: TextStyle(
-                            color: theme.accentCrimson,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
+                            color: theme.textMain,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
                             letterSpacing: 0.05,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'ALIGNED DATASTREAM RESPONSE CODE 200',
-                          style: TextStyle(color: theme.textSub, fontSize: 7, fontWeight: FontWeight.bold),
+                          'MAX: $maxDayTemp°C / MIN: $minDayTemp°C',
+                          style: TextStyle(color: theme.textSub, fontSize: 8, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                   ),
-                )
+                ),
               ],
             ),
           ),
-
-          // QUAD STRUCTURE TELEMETRY GRID
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.6,
+            childAspectRatio: 2.2,
             children: [
-              _buildMetricTile('TEMPERATURE ENVELOPE', '${currentTemp.toStringAsFixed(1)}°C', 'MAX: ${daily['temperature_2m_max'][3]}°C / MIN: ${daily['temperature_2m_min'][3]}°C', theme),
-              _buildMetricTile('APPARENT PERCEPTION', '${apparentTemp.toStringAsFixed(1)}°C', 'FEELS LIKE MATRIX TEMPERATURE', theme),
-              _buildMetricTile('RELATIVE ATMOSPHERE', '$currentHumidity%', 'HUMIDITY LEVEL WATER SATURATION', theme),
-              _buildMetricTile('HYDROMETRIC DISCHARGE', '${currentRain.toStringAsFixed(1)} MM', 'TOTAL PRECIPITATION PRECIP QUANT', theme),
-              _buildMetricTile('WIND VELOCITY FIELD', '${windSpeed.toStringAsFixed(1)} KM/H', 'BEARING DIR VECTOR: $windDir° NNE', theme),
-              _buildMetricTile('OPTICAL VISIBILITY', '${(visibility / 1000).toStringAsFixed(1)} KM', 'RADAR RAY PATH GAP COMPUTE', theme),
+              _buildMetricTile('AIR MOISTURE', '$humidity%', 'RELATIVE HYGROMETER INDEX', theme),
+              _buildMetricTile('VECTOR SPEED', '${windSpeed.toStringAsFixed(1)} KM/H', 'SURFACE WIND MAGNITUDE', theme),
+              _buildMetricTile('VECTOR HEADING', '$windDir°', 'BAROMETRIC COMPASS AZIMUTH', theme),
+              _buildMetricTile('SYNOPTIC CORE', 'WMO $weatherCode', 'SYNOPTIC CODE SPECS SIGNATURE', theme),
             ],
           ),
-
-          // HOURLY TRACK PLOT FRAME
+          if (dayHourlyChartTemps.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: theme.ruleBorder, width: 0.8),
+                  bottom: BorderSide(color: theme.ruleBorder, width: 0.8),
+                ),
+                color: theme.panelBg,
+              ),
+              child: Text(
+                '24-HOUR RADIAL TEMPERATURE TIMELINE MONITOR',
+                style: TextStyle(color: theme.textMain, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.05),
+              ),
+            ),
+            Container(
+              height: 120,
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 24, bottom: 12, left: 16, right: 16),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: theme.ruleBorder, width: 0.8)),
+              ),
+              child: CustomPaint(
+                painter: HourlyChartPainter(temperatures: dayHourlyChartTemps, theme: theme),
+              ),
+            ),
+          ],
+          // FIXED PARAMETER HERE (Line 549 Error Resolution): Wrapped inside proper Box Border object
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: theme.ruleBorder, width: 0.8), bottom: BorderSide(color: theme.ruleBorder, width: 0.8)),
+              border: Border(bottom: BorderSide(color: theme.ruleBorder, width: 0.8)),
               color: theme.panelBg,
             ),
             child: Text(
-              'HOURLY RUN TIMELINE MATRIX (24 HOUR PERIOD)',
-              style: TextStyle(color: theme.textMain, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.05),
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            height: 120,
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: theme.ruleBorder, width: 0.8)),
-            ),
-            child: CustomPaint(
-              painter: HourlyChartPainter(temperatures: dayHourlyChartTemps, theme: theme),
-            ),
-          ),
-
-          // VERTICAL DATALIST MATRIX
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: theme.ruleBorder, width: 0.8)),
-              color: theme.panelBg,
-            ),
-            child: Text(
-              '7-DAY LONG range forecast PLOTS',
+              '7-DAY LONG RANGE FORECAST PLOTS',
               style: TextStyle(color: theme.textMain, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.05),
             ),
           ),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: (daily['time'] as List).length,
+            itemCount: dailyTimes.length,
             itemBuilder: (context, index) {
-              final String rawDate = daily['time'][index];
-              final double maxT = (daily['temperature_2m_max'][index] as num).toDouble();
-              final double minT = (daily['temperature_2m_min'][index] as num).toDouble();
+              final String rawDate = dailyTimes[index];
+              final double maxT = (daily['temperature_2m_max']?[index] as num? ?? 0.0).toDouble();
+              final double minT = (daily['temperature_2m_min']?[index] as num? ?? 0.0).toDouble();
+              final int code = (daily['weather_code']?[index] as num? ?? 0).toInt();
 
-              // Highlight signature tracking index markers (Today is index 3 because past_days=3)
-              final bool isToday = index == 3;
+              String dayCondition = 'CLEAR';
+              if (code >= 51) {
+                dayCondition = 'RAINY';
+              } else if (code >= 1 && code <= 3) {
+                dayCondition = 'CLOUDY';
+              }
 
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   border: Border(bottom: BorderSide(color: theme.ruleBorder, width: 0.8)),
-                  color: isToday ? theme.textMain.withOpacity(0.04) : Colors.transparent,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 4,
-                          color: isToday ? theme.accentCrimson : theme.ruleBorder,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          isToday ? 'TODAY // $rawDate' : 'MATRIX // $rawDate',
-                          style: TextStyle(
-                            color: isToday ? theme.textMain : theme.textSub,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      rawDate.toUpperCase(),
+                      style: TextStyle(color: theme.textMain, fontSize: 9, fontWeight: FontWeight.w800, fontFamily: 'monospace'),
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          '${maxT.toStringAsFixed(0)}°',
-                          style: TextStyle(color: theme.textMain, fontSize: 10, fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${minT.toStringAsFixed(0)}°',
-                          style: TextStyle(color: theme.textSub, fontSize: 10, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    )
+                    Text(
+                      dayCondition,
+                      style: TextStyle(color: theme.textSub, fontSize: 8, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${maxT.toStringAsFixed(0)}° / ${minT.toStringAsFixed(0)}°C',
+                      style: TextStyle(color: theme.textMain, fontSize: 9, fontWeight: FontWeight.w900, fontFamily: 'monospace'),
+                    ),
                   ],
                 ),
               );
@@ -607,15 +592,9 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(color: theme.textSub, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.04),
-          ),
+          finalTextElement(label, theme.textSub, 8, FontWeight.bold, letterSpacing: 0.04),
           const SizedBox(height: 3),
-          Text(
-            value.toUpperCase(),
-            style: TextStyle(color: theme.textMain, fontSize: 13, fontWeight: FontWeight.w900),
-          ),
+          finalTextElement(value.toUpperCase(), theme.textMain, 13, FontWeight.w900),
           const SizedBox(height: 2),
           Text(
             description.toUpperCase(),
@@ -625,6 +604,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget finalTextElement(String data, Color color, double size, FontWeight weight, {double? letterSpacing}) {
+    return Text(
+      data,
+      style: TextStyle(color: color, fontSize: size, fontWeight: weight, letterSpacing: letterSpacing),
     );
   }
 
@@ -655,7 +641,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           child: CustomPaint(painter: NightIconPainter(color: color)),
         );
       default:
-        return const SizedBox.shrink();
+        return Container();
     }
   }
 }
