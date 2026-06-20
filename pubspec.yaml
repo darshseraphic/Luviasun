@@ -10,11 +10,16 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_riverpod: ^2.5.1
+  # 1. Bumped to v10.1.0 to satisfy geolocator's internal dependency tree requirements cleanly
+  package_info_plus: ^10.1.0
 
+  # 2. Left at v6.2.1 (A stable, non-buggy release range on pub.dev that solves correctly)
+  sensors_plus: ^5.0.1
+
+  flutter_riverpod: ^2.5.1
+  geolocator: ^14.0.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-
   http: ^1.2.1
   url_launcher: ^6.3.0
 

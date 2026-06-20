@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:geolocator/geolocator.dart';
 import 'main.dart'; // Imports your global themeProvider flag
 
 // --- 1. LOCAL THEME MATRIX SPECIFICATION ---
@@ -22,7 +24,7 @@ class CompassUiTheme {
   }
 }
 
-// --- 2. HIGH-FIDELITY BRUTALIST DIAL PAINTER ---
+// --- 2. MINIMAL BRUTALIST DIAL PAINTER ---
 class BrutalistCompassPainter extends CustomPainter {
   final double heading;
   final CompassUiTheme theme;
@@ -32,86 +34,44 @@ class BrutalistCompassPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) * 0.4;
+    final radius = math.min(size.width, size.height) * 0.42;
 
     final finePaint = Paint()
       ..color = theme.ruleBorder
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8;
 
-    final mainPaint = Paint()
-      ..color = theme.textMain
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
     final crimsonPaint = Paint()
       ..color = theme.accentCrimson
       ..style = PaintingStyle.fill;
 
-    // Draw structural radar grid lines (Static crosshairs)
-    canvas.drawLine(Offset(center.dx - radius - 20, center.dy), Offset(center.dx + radius + 20, center.dy), finePaint);
-    canvas.drawLine(Offset(center.dx, center.dy - radius - 20), Offset(center.dx, center.dy + radius + 20), finePaint);
+    // Minimal outer structural framework rings
     canvas.drawCircle(center, radius, finePaint);
-    canvas.drawCircle(center, radius * 0.6, finePaint);
+    canvas.drawCircle(center, radius * 0.85, finePaint);
 
-    // Save canvas to perform heading rotation operations
+    // Save canvas matrix state to process heading orientation
     canvas.save();
     canvas.translate(center.dx, center.dy);
-    // Convert degrees to radians and invert rotation to match real world alignment
+
+    // Convert degrees to radians and invert rotation
     final double headingRadians = -heading * (math.pi / 180);
     canvas.rotate(headingRadians);
 
-    // Draw cardinal direction indicator blocks & tick arrays
-    final List<String> cardinals = ['N', 'E', 'S', 'W'];
-    for (int i = 0; i < 24; i++) {
-      final double angle = (i * 15) * (math.pi / 180);
-      final isCardinal = i % 6 == 0;
-      final double startLen = radius;
-      final double endLen = isCardinal ? radius - 12 : radius - 6;
-
-      canvas.drawLine(
-        Offset(startLen * math.cos(angle), startLen * math.sin(angle)),
-        Offset(endLen * math.cos(angle), endLen * math.sin(angle)),
-        isCardinal ? mainPaint : finePaint,
-      );
-
-      if (isCardinal) {
-        final String text = cardinals[i ~/ 6];
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: text,
-            style: TextStyle(
-              color: text == 'N' ? theme.accentCrimson : theme.textMain,
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-
-        final double textRadius = radius - 24;
-        final double textAngle = angle - (math.pi / 2);
-
-        canvas.save();
-        canvas.translate(textRadius * math.cos(angle), textRadius * math.sin(angle));
-        canvas.rotate(angle + (math.pi / 2));
-        textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
-        canvas.restore();
-      }
-    }
-
-    final Offset nodeOffset = Offset(0, -radius);
-    canvas.drawRect(
-      Rect.fromCenter(center: nodeOffset, width: 8, height: 8),
+    // TARGET INDICATOR: Minimal dot tracked far away from center
+    final double indicatorOrbitDistance = radius * 0.925;
+    canvas.drawCircle(
+      Offset(0, -indicatorOrbitDistance),
+      5.0, // Tracking dot size
       crimsonPaint,
     );
 
     canvas.restore();
 
+    // Static upper indexing alignment pointer at top edge boundary
     final path = Path()
-      ..moveTo(center.dx, center.dy - radius - 15)
-      ..lineTo(center.dx - 5, center.dy - radius - 25)
-      ..lineTo(center.dx + 5, center.dy - radius - 25)
+      ..moveTo(center.dx, center.dy - radius - 8)
+      ..lineTo(center.dx - 4, center.dy - radius - 16)
+      ..lineTo(center.dx + 4, center.dy - radius - 16)
       ..close();
     canvas.drawPath(path, Paint()..color = theme.textMain);
   }
@@ -122,32 +82,114 @@ class BrutalistCompassPainter extends CustomPainter {
   }
 }
 
-// --- 3. ENGINE CONTROLLER SYSTEM ---
-class CompassScreen extends ConsumerWidget {
+// --- 3. ENGINE CONTROLLER LOGIC HUB ---
+class CompassScreen extends ConsumerStatefulWidget {
   const CompassScreen({super.key});
 
-  String _getHeadingDirection(double heading) {
-    final double norm = (heading % 360 + 360) % 360;
-    if (norm >= 337.5 || norm < 22.5) return 'NORTH // ALPHA SEC';
-    if (norm >= 22.5 && norm < 67.5) return 'NORTH-EAST // QUAD BRV';
-    if (norm >= 67.5 && norm < 112.5) return 'EAST // CHARLIE SEC';
-    if (norm >= 112.5 && norm < 157.5) return 'SOUTH-EAST // QUAD DELTA';
-    if (norm >= 157.5 && norm < 202.5) return 'SOUTH // ECHO SEC';
-    if (norm >= 202.5 && norm < 247.5) return 'SOUTH-WEST // QUAD FOXTROT';
-    if (norm >= 247.5 && norm < 292.5) return 'WEST // GOLF SEC';
-    return 'NORTH-WEST // QUAD HOTEL';
+  @override
+  ConsumerState<CompassScreen> createState() => _CompassScreenState();
+}
+
+class _CompassScreenState extends ConsumerState<CompassScreen> {
+  // Vectors for smoothing matrix filter
+  List<double> _accelerometerValues = [0.0, 0.0, 0.0];
+  List<double> _magnetometerValues = [0.0, 0.0, 0.0];
+
+  bool _hasAccelerometerData = false;
+  bool _hasMagnetometerData = false;
+
+  double _heading = 0.0;
+  String _hardwareStatus = "INITIALIZING CORE DATA SYNCHRONIZATION...";
+
+  // Smoothing factor alpha (Lower values = smoother but slightly slower response, 0.15 is ideal)
+  final double _alpha = 0.15;
+
+  @override
+  void initState() {
+    super.initState();
+    _initHybridSensorSystem();
+  }
+
+  Future<void> _initHybridSensorSystem() async {
+    // 1. Verify and establish runtime location services
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    // 2. Continuous Hardware Streams Setup
+    accelerometerEvents.listen((AccelerometerEvent event) {
+      if (mounted) {
+        setState(() {
+          // Apply low-pass exponential filter to raw accelerometer array
+          _accelerometerValues[0] = _accelerometerValues[0] + _alpha * (event.x - _accelerometerValues[0]);
+          _accelerometerValues[1] = _accelerometerValues[1] + _alpha * (event.y - _accelerometerValues[1]);
+          _accelerometerValues[2] = _accelerometerValues[2] + _alpha * (event.z - _accelerometerValues[2]);
+          _hasAccelerometerData = true;
+          _calculateVectorHeading();
+        });
+      }
+    });
+
+    magnetometerEvents.listen((MagnetometerEvent event) {
+      if (mounted) {
+        setState(() {
+          // Apply low-pass exponential filter to raw magnetometer array
+          _magnetometerValues[0] = _magnetometerValues[0] + _alpha * (event.x - _magnetometerValues[0]);
+          _magnetometerValues[1] = _magnetometerValues[1] + _alpha * (event.y - _magnetometerValues[1]);
+          _magnetometerValues[2] = _magnetometerValues[2] + _alpha * (event.z - _magnetometerValues[2]);
+          _hasMagnetometerData = true;
+          _calculateVectorHeading();
+        });
+      }
+    });
+  }
+
+  void _calculateVectorHeading() {
+    if (!_hasAccelerometerData || !_hasMagnetometerData) {
+      _hardwareStatus = "AWAITING SENSOR CALIBRATION MATRIX...";
+      return;
+    }
+
+    // Mathematical calculations using smoothed values
+    final double ax = _accelerometerValues[0];
+    final double ay = _accelerometerValues[1];
+    final double az = _accelerometerValues[2];
+
+    final double mx = _magnetometerValues[0];
+    final double my = _magnetometerValues[1];
+    final double mz = _magnetometerValues[2];
+
+    // Compute coordinate fields across planar projections
+    double hx = mx * az - mz * ax;
+    double hy = my * az - mz * ay;
+
+    double azimuth = math.atan2(hy, hx) * (180 / math.pi);
+
+    // Normalize into complete 360 degree space
+    azimuth = (azimuth + 360) % 360;
+
+    // Apply a final layer of smoothing directly to the heading variable to stop small text jitters
+    if ((azimuth - _heading).abs() < 180) {
+      _heading = _heading + _alpha * (azimuth - _heading);
+    } else {
+      // Handle degree overflow boundary wrapping smoothly
+      if (azimuth > _heading) {
+        _heading = _heading + _alpha * (azimuth - 360 - _heading);
+        _heading = (_heading + 360) % 360;
+      } else {
+        _heading = _heading + _alpha * (azimuth + 360 - _heading);
+        _heading = _heading % 360;
+      }
+    }
+
+    _hardwareStatus = "LIVE HARDWARE TELEMETRY LINKED";
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final bool isDark = ref.watch(themeProvider);
     final theme = CompassUiTheme(isDark);
-
-    // SIMULATED HARDWARE STREAM (Guarantees compilation without flutter_compass package)
-    final Stream<double> simulatedHeadingStream = Stream.periodic(
-      const Duration(milliseconds: 50),
-          (count) => (count * 1.5) % 360,
-    ).asBroadcastStream();
 
     return Scaffold(
       backgroundColor: theme.canvasBg,
@@ -175,7 +217,7 @@ class CompassScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'STREAMING SIMULATED HARWARE COORDINATE DATA LINK',
+                    _hardwareStatus.toUpperCase(),
                     style: TextStyle(
                       color: theme.textSub,
                       fontSize: 8,
@@ -185,84 +227,19 @@ class CompassScreen extends ConsumerWidget {
                 ],
               ),
             ),
-
             Expanded(
-              child: StreamBuilder<double>(
-                stream: simulatedHeadingStream, // <--- Swap this to FlutterCompass.events later
-                initialData: 0.0,
-                builder: (context, snapshot) {
-                  final double heading = snapshot.data ?? 0.0;
-
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.all(24),
-                            child: CustomPaint(
-                              painter: BrutalistCompassPainter(heading: heading, theme: theme),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        childAspectRatio: 1.8,
-                        children: [
-                          _buildTelemetryTile('ABSOLUTE HEADING', '${heading.toStringAsFixed(1)}°', 'AZIMUTH LOG MATRIX RAD', theme),
-                          _buildTelemetryTile('BEARING VECTOR', _getHeadingDirection(heading), 'COMPASS SYSTEM TRACKING POSITION', theme),
-                          _buildTelemetryTile('ACCURACY THRESHOLD', 'SIMULATED', 'HARDWARE DATALINK BYPASSED', theme),
-                          _buildTelemetryTile('AXIS STATUS', 'HEADING RESOLVED', 'SYSTEM STREAM ATTITUDE LOCK', theme),
-                        ],
-                      ),
-                    ],
-                  );
-                },
+              child: Center(
+                child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.all(24),
+                  child: CustomPaint(
+                    painter: BrutalistCompassPainter(heading: _heading, theme: theme),
+                  ),
+                ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTelemetryTile(String label, String value, String description, CompassUiTheme theme) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: theme.ruleBorder, width: 0.8),
-          right: BorderSide(color: theme.ruleBorder, width: 0.8),
-        ),
-        color: theme.panelBg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: theme.textSub, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 0.04),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: theme.textMain, fontSize: 12, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            description,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: theme.textSub, fontSize: 6.5, fontWeight: FontWeight.w500),
-          ),
-        ],
       ),
     );
   }
