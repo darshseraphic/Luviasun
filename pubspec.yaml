@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
   flutter_map: ^8.0.0
   latlong2: ^0.9.1
-
   flutter_riverpod: ^2.5.1
   geolocator: ^14.0.3
   hive: ^2.2.3
@@ -22,9 +21,24 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.8 # <-- Native splash automation layer engine
   hive_generator: ^2.0.1
   build_runner: ^2.4.9
 
 flutter:
   uses-material-design: true
+
+# --- LAUNCHER ICON METRICS ---
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
+  remove_alpha_ios: true
+
+# --- BRUTALIST PLAIN BLACK NATIVE SPLASH CONFIGURATION ---
+flutter_native_splash:
+  color: "#000000"
+  fullscreen: true
+  android_12:
+    color: "#000000"

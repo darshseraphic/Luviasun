@@ -224,6 +224,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     }
   }
 
+  // --- LIFECYCLE MANAGEMENT LAYER ---
   Future<void> _loadCacheOrFetch() async {
     try {
       final box = await Hive.openBox('weather_cache');
@@ -233,18 +234,23 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
       final String? cachedJson = box.get('payload_string');
 
       if (cachedDate == todayKey && cachedJson != null) {
-        setState(() {
-          _telemetryData = json.decode(cachedJson);
-          _isLoading = false;
-        });
+        // Cache exists (either old or freshly grabbed by main.dart pre-fetch loop)
+        if (mounted) {
+          setState(() {
+            _telemetryData = json.decode(cachedJson);
+            _isLoading = false;
+          });
+        }
       } else {
-        _fetchTelemetryData(forced: false);
+        // Fallback option: if background pre-fetch hasn't updated yet, execute direct API lookup here.
+        await _fetchTelemetryData(forced: false);
       }
     } catch (_) {
       _fetchTelemetryData(forced: false);
     }
   }
 
+  // --- CENTRAL DISPATCHER ENGINE ---
   Future<void> _fetchTelemetryData({bool forced = true}) async {
     if (_telemetryData != null) {
       setState(() {
@@ -278,6 +284,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
         final responseBody = await response.transform(utf8.decoder).join();
         final Map<String, dynamic> data = json.decode(responseBody);
 
+        // Lock in persistent storage parameters immediately upon successful network return
         final box = await Hive.openBox('weather_cache');
         final String todayKey = DateTime.now().toIso8601String().substring(0, 10);
         await box.put('last_fetch_day', todayKey);
@@ -338,6 +345,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                     ),
                   ),
                   GestureDetector(
+                    // FORCED PARAMETER BYPASSES MIDNIGHT TIMESTAMPS FOR MANUALLY TRIGGERED REFRESHES
                     onTap: () => _fetchTelemetryData(forced: true),
                     child: Container(
                       color: Colors.transparent,
@@ -360,10 +368,14 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
             Expanded(
               child: _isLoading
-                  ? Center(
-                child: Text(
-                  'CALIBRATING STREAMING VECTOR...',
-                  style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900),
+                  ? Container(
+                // Pure dark container matching background signature to completely hide millisecond cache parsing re-renders
+                color: theme.canvasBg,
+                child: const Center(
+                  child: Text(
+                    '',
+                    style: TextStyle(fontSize: 0),
+                  ),
                 ),
               )
                   : _errorMessage != null
