@@ -130,11 +130,6 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (temperatures.isEmpty) return;
 
-    final linePaint = Paint()
-      ..color = theme.textMain
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-
     final axisPaint = Paint()
       ..color = theme.ruleBorder
       ..style = PaintingStyle.stroke
@@ -148,34 +143,35 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
     }
 
     final double range = maxTemp - minTemp;
-    final double paddingLeft = 40.0;
+    final double paddingLeft = 24.0;
+    final double paddingRight = 24.0;
     final double paddingBottom = 32.0;
-    final double chartWidth = size.width - paddingLeft;
+    final double chartWidth = size.width - paddingLeft - paddingRight;
     final double chartHeight = size.height - paddingBottom;
 
-    final double stepX = chartWidth / (temperatures.length - 1);
+    final double stepX = temperatures.length > 1 ? chartWidth / (temperatures.length - 1) : chartWidth;
 
-    canvas.drawLine(Offset(paddingLeft, 0), Offset(paddingLeft, chartHeight), axisPaint);
-    canvas.drawLine(Offset(paddingLeft, chartHeight), Offset(size.width, chartHeight), axisPaint);
+    // Draw horizontal X-axis line only (Y-axis lines and labels completely removed)
+    canvas.drawLine(Offset(paddingLeft, chartHeight), Offset(size.width - paddingRight, chartHeight), axisPaint);
 
-    _drawAxisText(canvas, '${maxTemp.toStringAsFixed(0)}°C', Offset(4, 2), theme.textMain);
-    _drawAxisText(canvas, '${minTemp.toStringAsFixed(0)}°C', Offset(4, chartHeight - 14), theme.textMain);
-    _drawAxisText(canvas, '${((maxTemp + minTemp) / 2).toStringAsFixed(0)}°C', Offset(4, (chartHeight / 2) - 6), theme.textMain);
-
-    final path = Path();
     for (int i = 0; i < temperatures.length; i++) {
       final double x = paddingLeft + (i * stepX);
-      final double normalizedY = (temperatures[i] - minTemp) / range;
-      final double y = chartHeight - (normalizedY * (chartHeight - 32)) - 16;
+      final double normalizedY = range > 0 ? (temperatures[i] - minTemp) / range : 0.5;
 
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
+      // Calculate height for brutalist block bars
+      final double barHeight = 20 + (normalizedY * (chartHeight - 60));
+      final double y = chartHeight - barHeight;
 
-      canvas.drawRect(Rect.fromCenter(center: Offset(x, y), width: 6, height: 6), Paint()..color = theme.textMain);
+      // Draw brutalist bar block
+      final barPaint = Paint()
+        ..color = theme.textMain
+        ..style = PaintingStyle.fill;
 
+      final double barWidth = 24.0;
+      final rect = Rect.fromLTRB(x - barWidth / 2, y, x + barWidth / 2, chartHeight);
+      canvas.drawRect(rect, barPaint);
+
+      // Temperature indicator value text block directly above each bar
       final nodeText = TextPainter(
         text: TextSpan(
           text: '${temperatures[i].toStringAsFixed(0)}°',
@@ -185,22 +181,18 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
       )..layout();
       nodeText.paint(canvas, Offset(x - (nodeText.width / 2), y - 16));
 
+      // Synchronized X-axis timeline day names
       if (i < dayLabels.length) {
-        _drawAxisText(canvas, dayLabels[i], Offset(x - 10, chartHeight + 8), theme.textMain);
+        final labelPainter = TextPainter(
+          text: TextSpan(
+            text: dayLabels[i],
+            style: TextStyle(color: theme.textMain, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        labelPainter.paint(canvas, Offset(x - (labelPainter.width / 2), chartHeight + 8));
       }
     }
-    canvas.drawPath(path, linePaint);
-  }
-
-  void _drawAxisText(Canvas canvas, String text, Offset offset, Color color) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    textPainter.paint(canvas, offset);
   }
 
   @override
@@ -541,7 +533,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
               ),
               child: Center(
                 child: Text(
-                  'EXPECTED TEMPERATURES TIMELINE BY DAY',
+                  'TIMELINE',
                   style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                 ),
               ),
@@ -572,7 +564,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             ),
             child: Center(
               child: Text(
-                'COMPREHENSIVE MATRIX RECORD',
+                'DATA',
                 style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
               ),
             ),
@@ -583,54 +575,86 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             child: Table(
               border: TableBorder(
                 horizontalInside: BorderSide(color: theme.ruleBorder, width: 1.0),
+                verticalInside: BorderSide(color: theme.ruleBorder, width: 1.0),
                 top: BorderSide(color: theme.ruleBorder, width: 1.0),
                 left: BorderSide(color: theme.ruleBorder, width: 1.0),
                 right: BorderSide(color: theme.ruleBorder, width: 1.0),
                 bottom: BorderSide(color: theme.ruleBorder, width: 1.0),
               ),
-              children: List.generate((daily['time'] as List? ?? []).length, (index) {
-                final String date = daily['time'][index];
-                final double max = (daily['temperature_2m_max']?[index] ?? 0.0).toDouble();
-                final double min = (daily['temperature_2m_min']?[index] ?? 0.0).toDouble();
-                final int code = (daily['weather_code']?[index] ?? 0).toInt();
-
-                String dayCondition = 'CLEAR';
-                if (code >= 51) {
-                  dayCondition = 'RAINY';
-                } else if (code >= 1 && code <= 3) {
-                  dayCondition = 'CLOUDY';
-                }
-
-                final String resolvedDayName = _convertToDayName(date);
-
-                return TableRow(
+              children: [
+                // Title Header Row (The dividing line is automatically generated below it)
+                TableRow(
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        resolvedDayName,
-                        style: TextStyle(color: theme.textMain, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                        'DAY',
+                        style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        dayCondition,
+                        'CLIMATE',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: theme.textMain, fontSize: 12, fontWeight: FontWeight.w700),
+                        style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        '${max.toStringAsFixed(0)}° / ${min.toStringAsFixed(0)}°C',
+                        'DATA/DATA',
                         textAlign: TextAlign.end,
-                        style: TextStyle(color: theme.textMain, fontSize: 13, fontWeight: FontWeight.w900),
+                        style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                       ),
                     ),
                   ],
-                );
-              }),
+                ),
+                // Matrix Records Data Generation
+                ...List.generate((daily['time'] as List? ?? []).length, (index) {
+                  final String date = daily['time'][index];
+                  final double max = (daily['temperature_2m_max']?[index] ?? 0.0).toDouble();
+                  final double min = (daily['temperature_2m_min']?[index] ?? 0.0).toDouble();
+                  final int code = (daily['weather_code']?[index] ?? 0).toInt();
+
+                  String dayCondition = 'CLEAR';
+                  if (code >= 51) {
+                    dayCondition = 'RAINY';
+                  } else if (code >= 1 && code <= 3) {
+                    dayCondition = 'CLOUDY';
+                  }
+
+                  final String resolvedDayName = _convertToDayName(date);
+
+                  return TableRow(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          resolvedDayName,
+                          style: TextStyle(color: theme.textMain, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          dayCondition,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: theme.textMain, fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          '${max.toStringAsFixed(0)}° / ${min.toStringAsFixed(0)}°C',
+                          textAlign: TextAlign.end,
+                          style: TextStyle(color: theme.textMain, fontSize: 13, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
             ),
           ),
         ],
