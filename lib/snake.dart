@@ -301,7 +301,12 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
                   children: [
                     Text(
                       'SCORE: ${_score.toString().padLeft(3, '0')}',
-                      style: TextStyle(color: theme.textMain, fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 0.05),
+                      style: TextStyle(
+                        color: theme.textMain,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.0,
+                      ),
                     ),
                     Text(
                       'BEST: ${_highScore.toString().padLeft(3, '0')}',

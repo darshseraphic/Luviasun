@@ -59,10 +59,10 @@ class _MapScreenState extends State<MapScreen> {
                       Padding(
                         padding: const EdgeInsets.only(left: 16),
                         child: Text(
-                          'MAP DETECTOR',
+                          'MAP',
                           style: TextStyle(
                             color: theme.textMain,
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 2.0,
                           ),

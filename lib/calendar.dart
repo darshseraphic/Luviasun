@@ -68,8 +68,8 @@ class CalendarScreen extends ConsumerWidget {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    'CALENDAR TIMELINE',
-                    style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.04),
+                    'CALENDAR',
+                    style: TextStyle(color: textMain, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2.0),
                   ),
                   Text(
                     '$currentDayOfYear / $totalDaysInYear DAYS (${completionPercentage.toStringAsFixed(1)}%)',
