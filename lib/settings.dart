@@ -158,7 +158,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             details,
             style: TextStyle(
               color: theme.textSub,
-              fontSize: 10,
+              fontSize: 12,
               height: 1.5,
               fontWeight: FontWeight.w600,
             ),
