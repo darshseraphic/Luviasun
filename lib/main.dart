@@ -11,7 +11,7 @@ import 'settings.dart';
 
 // --- 1. GLOBAL STATE PROVIDERS ---
 class ThemeNotifier extends Notifier<bool> {
-  static const String _boxName = 'Luviasun';
+  static const String _boxName = 'luviasun'; // Updated storage name signature
   static const String _key = 'is_dark_mode';
 
   @override
@@ -36,7 +36,7 @@ void main() async {
 
   // Initialize Hive local disk registry partitions
   await Hive.initFlutter();
-  await Hive.openBox('Luviasun');
+  await Hive.openBox('luviasun');
 
   runApp(
     const ProviderScope(
@@ -56,11 +56,10 @@ class LuviasunAppEngine extends ConsumerWidget {
     return MaterialApp(
       title: 'LUVIASUN',
       debugShowCheckedModeBanner: false,
-      // Force typography scaling optimization for technical readouts
       theme: ThemeData(
         useMaterial3: true,
         brightness: isDark ? Brightness.dark : Brightness.light,
-        fontFamily: 'monospace', // Enforces alignment consistency across text streams
+        // Removed monospace property to guarantee global system sans-serif presentation
       ),
       home: const MainNavigationShell(),
     );
@@ -89,7 +88,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
 
   final List<String> _navigationLabels = [
     'WX',
-    'MAP', // Renamed label from 'COMPASS' to 'MAP'
+    'COMPASS',
     'CALENDAR',
     'ARCADE',
     'SYS',
@@ -97,7 +96,6 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
-    // Safely watch state live through Riverpod's WidgetRef system
     final isDark = ref.watch(themeProvider);
 
     final canvasBg = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
@@ -111,7 +109,6 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
         index: _currentViewIndex,
         children: _instrumentViews,
       ),
-      // BRUTALIST ZERO-CURVE SEGMENTED NAVIGATION DECK
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: ruleBorder, width: 0.8)),
@@ -135,7 +132,6 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: isSelected ? textMain.withOpacity(0.05) : Colors.transparent,
-                      // Draw a right border separator block except on the last item
                       border: index < _navigationLabels.length - 1
                           ? Border(right: BorderSide(color: ruleBorder, width: 0.8))
                           : null,

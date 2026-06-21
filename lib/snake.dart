@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'main.dart'; // Imports global themeProvider flag
+import 'main.dart';
 
 // --- 1. LOCAL THEME MATRIX SPECIFICATION ---
 class SnakeUiTheme {
@@ -13,7 +13,7 @@ class SnakeUiTheme {
   late final Color textSub;
   late final Color ruleBorder;
   late final Color panelBg;
-  final Color accentCrimson = const Color(0xFF5F0E0D); // Strict fruit color
+  final Color accentCrimson = const Color(0xFF5F0E0D);
 
   SnakeUiTheme(this.isDark) {
     canvasBg = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
@@ -44,42 +44,38 @@ class SnakePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double cellSizeX = size.width / gridSizeX;
-    final double cellSizeY = size.height / gridSizeY;
+    final double cellSize = size.width / gridSizeX;
 
-    // Draw faint structural coordinate grid lines across full screen bounds
     final gridPaint = Paint()
       ..color = theme.ruleBorder.withOpacity(0.4)
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
     for (int i = 0; i <= gridSizeX; i++) {
-      canvas.drawLine(Offset(i * cellSizeX, 0), Offset(i * cellSizeX, size.height), gridPaint);
+      canvas.drawLine(Offset(i * cellSize, 0), Offset(i * cellSize, size.height), gridPaint);
     }
     for (int i = 0; i <= gridSizeY; i++) {
-      canvas.drawLine(Offset(0, i * cellSizeY), Offset(size.width, i * cellSizeY), gridPaint);
+      canvas.drawLine(Offset(0, i * cellSize), Offset(size.width, i * cellSize), gridPaint);
     }
 
-    // Paint the Snake Segments (Pure Squares)
     final snakePaint = Paint()
       ..color = theme.textMain
       ..style = PaintingStyle.fill;
 
     for (final point in snake) {
       canvas.drawRect(
-        Rect.fromLTWH(point.x * cellSizeX, point.y * cellSizeY, cellSizeX, cellSizeY),
+        Rect.fromLTWH(point.x * cellSize, point.y * cellSize, cellSize, cellSize),
         snakePaint,
       );
     }
 
-    // Paint the Fruit Segment (Deep Crimson Square)
     if (fruit != null) {
       final fruitPaint = Paint()
         ..color = theme.accentCrimson
         ..style = PaintingStyle.fill;
 
       canvas.drawRect(
-        Rect.fromLTWH(fruit!.x * cellSizeX, fruit!.y * cellSizeY, cellSizeX, cellSizeY),
+        Rect.fromLTWH(fruit!.x * cellSize, fruit!.y * cellSize, cellSize, cellSize),
         fruitPaint,
       );
     }
@@ -99,8 +95,8 @@ class SnakeScreen extends ConsumerStatefulWidget {
 
 class _SnakeScreenState extends ConsumerState<SnakeScreen> {
   static const int _gridSizeX = 20;
-  static const int _gridSizeY = 28; // Expanded matrix limits to fill full screen real estate
-  static const String _boxName = 'rocen_settings_box';
+  static const int _gridSizeY = 28;
+  static const String _boxName = 'luviasun';
 
   Timer? _gameLoop;
   bool _isPlaying = false;
@@ -139,8 +135,16 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
     }
   }
 
+  void _spawnFruit() {
+    final random = Random();
+    Point<int> newFruit;
+    do {
+      newFruit = Point(random.nextInt(_gridSizeX), random.nextInt(_gridSizeY));
+    } while (_snake.contains(newFruit));
+    _fruit = newFruit;
+  }
+
   void _initializeBoard() {
-    // Starting coordinates initialized at exactly 2 blocks length
     _snake = [
       const Point(6, 14),
       const Point(5, 14),
@@ -149,15 +153,6 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
     _nextDirection = SnakeDirection.right;
     _score = 0;
     _spawnFruit();
-  }
-
-  void _spawnFruit() {
-    final random = Random();
-    Point<int> newFruit;
-    do {
-      newFruit = Point(random.nextInt(_gridSizeX), random.nextInt(_gridSizeY));
-    } while (_snake.contains(newFruit));
-    _fruit = newFruit;
   }
 
   void _startGame() {
@@ -206,13 +201,11 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
         break;
     }
 
-    // Dynamic Full Screen Wall Collision Boundaries
     if (nextHead.x < 0 || nextHead.x >= _gridSizeX || nextHead.y < 0 || nextHead.y >= _gridSizeY) {
       _gameOver();
       return;
     }
 
-    // Self Collision Failsafe Loops
     if (_snake.contains(nextHead)) {
       _gameOver();
       return;
@@ -223,7 +216,7 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
 
       if (nextHead == _fruit) {
         _score++;
-        _spawnFruit(); // Grows naturally by omitting the tail truncation logic step
+        _spawnFruit();
       } else {
         _snake.removeLast();
       }
@@ -245,26 +238,40 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
     final isDark = ref.watch(themeProvider);
     final theme = SnakeUiTheme(isDark);
 
+    String buttonText = 'START ARCADE ENGINE';
+    VoidCallback buttonAction = _startGame;
+
+    if (_isGameOver) {
+      buttonText = 'REBOOT ENGINE';
+      buttonAction = _startGame;
+    } else if (_isPlaying) {
+      buttonText = 'PAUSE';
+      buttonAction = _stopGame;
+    } else if (_score > 0) {
+      buttonText = 'RESUME ENGINE';
+      buttonAction = _startGame;
+    }
+
     return Scaffold(
       backgroundColor: theme.canvasBg,
       body: SafeArea(
         child: GestureDetector(
-          // Immersive Telemetry Pan Tracker converting finger swipes directly to coordinates
+          behavior: HitTestBehavior.opaque,
           onPanUpdate: (details) {
             if (!_isPlaying || _isGameOver) return;
             final double dx = details.delta.dx;
             final double dy = details.delta.dy;
 
             if (dx.abs() > dy.abs()) {
-              if (dx > 1.5) {
+              if (dx > 4.0) {
                 _handleDirectionInput(SnakeDirection.right);
-              } else if (dx < -1.5) {
+              } else if (dx < -4.0) {
                 _handleDirectionInput(SnakeDirection.left);
               }
             } else {
-              if (dy > 1.5) {
+              if (dy > 4.0) {
                 _handleDirectionInput(SnakeDirection.down);
-              } else if (dy < -1.5) {
+              } else if (dy < -4.0) {
                 _handleDirectionInput(SnakeDirection.up);
               }
             }
@@ -274,12 +281,6 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // METRIC SYSTEM HEADER HUD
-                Text(
-                  'LUVIASUN INSTRUMENTATION // ARCADE',
-                  style: TextStyle(color: theme.textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 0.06),
-                ),
-                const SizedBox(height: 2),
                 Text(
                   'FULLSCREEN SNAKE ENGINE',
                   style: TextStyle(color: theme.textMain, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.02),
@@ -305,51 +306,51 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
 
                 Divider(color: theme.ruleBorder, height: 20, thickness: 0.8),
 
-                // UNBOUNDED FULL SCREEN ENGINE GRAPHICS MESH
                 Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: _isGameOver ? theme.accentCrimson : theme.textMain, width: 1.2),
-                      color: theme.panelBg,
-                    ),
-                    child: CustomPaint(
-                      painter: SnakePainter(
-                        gridSizeX: _gridSizeX,
-                        gridSizeY: _gridSizeY,
-                        snake: _snake,
-                        fruit: _fruit,
-                        theme: theme,
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: _gridSizeX / _gridSizeY,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: _isGameOver ? theme.accentCrimson : theme.textMain, width: 1.2),
+                          color: theme.panelBg,
+                        ),
+                        child: CustomPaint(
+                          painter: SnakePainter(
+                            gridSizeX: _gridSizeX,
+                            gridSizeY: _gridSizeY,
+                            snake: _snake,
+                            fruit: _fruit,
+                            theme: theme,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
 
-                // COLD REBOOT / LAUNCH SYSTEM FOOTER MODALS (Vanishes cleanly during execution loops)
-                if (!_isPlaying) ...[
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: _startGame,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: theme.textMain,
-                        border: Border.all(color: theme.textMain, width: 1.0),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _isGameOver ? 'REBOOT ENGINE' : 'START ARCADE ENGINE',
-                        style: TextStyle(
-                          color: isDark ? Colors.black : Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.08,
-                        ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: buttonAction,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: theme.textMain,
+                      border: Border.all(color: theme.textMain, width: 1.0),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      buttonText,
+                      style: TextStyle(
+                        color: isDark ? Colors.black : Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.08,
                       ),
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ),
