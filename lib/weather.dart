@@ -151,18 +151,15 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
 
     final double stepX = temperatures.length > 1 ? chartWidth / (temperatures.length - 1) : chartWidth;
 
-    // Draw horizontal X-axis line only (Y-axis lines and labels completely removed)
     canvas.drawLine(Offset(paddingLeft, chartHeight), Offset(size.width - paddingRight, chartHeight), axisPaint);
 
     for (int i = 0; i < temperatures.length; i++) {
       final double x = paddingLeft + (i * stepX);
       final double normalizedY = range > 0 ? (temperatures[i] - minTemp) / range : 0.5;
 
-      // Calculate height for brutalist block bars
       final double barHeight = 20 + (normalizedY * (chartHeight - 60));
       final double y = chartHeight - barHeight;
 
-      // Draw brutalist bar block
       final barPaint = Paint()
         ..color = theme.textMain
         ..style = PaintingStyle.fill;
@@ -171,7 +168,6 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
       final rect = Rect.fromLTRB(x - barWidth / 2, y, x + barWidth / 2, chartHeight);
       canvas.drawRect(rect, barPaint);
 
-      // Temperature indicator value text block directly above each bar
       final nodeText = TextPainter(
         text: TextSpan(
           text: '${temperatures[i].toStringAsFixed(0)}°',
@@ -181,7 +177,6 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
       )..layout();
       nodeText.paint(canvas, Offset(x - (nodeText.width / 2), y - 16));
 
-      // Synchronized X-axis timeline day names
       if (i < dayLabels.length) {
         final labelPainter = TextPainter(
           text: TextSpan(
@@ -498,6 +493,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             child: Table(
               border: TableBorder(
                 horizontalInside: BorderSide(color: theme.ruleBorder, width: 1.0),
+                verticalInside: BorderSide(color: theme.ruleBorder, width: 1.0),
                 top: BorderSide(color: theme.ruleBorder, width: 1.0),
                 left: BorderSide(color: theme.ruleBorder, width: 1.0),
                 right: BorderSide(color: theme.ruleBorder, width: 1.0),
@@ -582,13 +578,13 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                 bottom: BorderSide(color: theme.ruleBorder, width: 1.0),
               ),
               children: [
-                // Title Header Row (The dividing line is automatically generated below it)
                 TableRow(
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
                         'DAY',
+                        textAlign: TextAlign.center,
                         style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                       ),
                     ),
@@ -604,13 +600,12 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Text(
                         'DATA/DATA',
-                        textAlign: TextAlign.end,
+                        textAlign: TextAlign.center,
                         style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.0),
                       ),
                     ),
                   ],
                 ),
-                // Matrix Records Data Generation
                 ...List.generate((daily['time'] as List? ?? []).length, (index) {
                   final String date = daily['time'][index];
                   final double max = (daily['temperature_2m_max']?[index] ?? 0.0).toDouble();
@@ -632,6 +627,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Text(
                           resolvedDayName,
+                          textAlign: TextAlign.center,
                           style: TextStyle(color: theme.textMain, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                         ),
                       ),
@@ -647,7 +643,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Text(
                           '${max.toStringAsFixed(0)}° / ${min.toStringAsFixed(0)}°C',
-                          textAlign: TextAlign.end,
+                          textAlign: TextAlign.center,
                           style: TextStyle(color: theme.textMain, fontSize: 13, fontWeight: FontWeight.w900),
                         ),
                       ),
@@ -669,6 +665,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Text(
             keys,
+            textAlign: TextAlign.center,
             style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
           ),
         ),
@@ -676,7 +673,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Text(
             dataValue,
-            textAlign: TextAlign.end,
+            textAlign: TextAlign.center,
             style: TextStyle(color: theme.textMain, fontSize: 14, fontWeight: FontWeight.w900),
           ),
         ),

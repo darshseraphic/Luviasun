@@ -11,7 +11,7 @@ import 'settings.dart';
 
 // --- 1. GLOBAL STATE PROVIDERS ---
 class ThemeNotifier extends Notifier<bool> {
-  static const String _boxName = 'rocen_settings_box';
+  static const String _boxName = 'Luviasun';
   static const String _key = 'is_dark_mode';
 
   @override
@@ -36,7 +36,7 @@ void main() async {
 
   // Initialize Hive local disk registry partitions
   await Hive.initFlutter();
-  await Hive.openBox('rocen_settings_box');
+  await Hive.openBox('Luviasun');
 
   runApp(
     const ProviderScope(
@@ -81,7 +81,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
   // Registered application modules
   final List<Widget> _instrumentViews = [
     const WeatherScreen(),
-    const CompassScreen(),
+    const MapScreen(),
     const CalendarScreen(),
     const SnakeScreen(),
     const SettingsScreen(),
@@ -89,7 +89,7 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
 
   final List<String> _navigationLabels = [
     'WX',
-    'COMPASS',
+    'MAP', // Renamed label from 'COMPASS' to 'MAP'
     'CALENDAR',
     'ARCADE',
     'SYS',

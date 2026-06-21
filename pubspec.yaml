@@ -9,12 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # 1. Bumped to v10.1.0 to satisfy geolocator's internal dependency tree requirements cleanly
-  package_info_plus: ^10.1.0
-
-  # 2. Left at v6.2.1 (A stable, non-buggy release range on pub.dev that solves correctly)
-  sensors_plus: ^5.0.1
+  flutter_map: ^8.0.0
+  latlong2: ^0.9.1
 
   flutter_riverpod: ^2.5.1
   geolocator: ^14.0.3
