@@ -78,11 +78,10 @@ class _MapScreenState extends State<MapScreen> {
                     color: theme.mapCanvasBg, // Catches view bounds seamlessly
                     child: FlutterMap(
                       options: MapOptions(
-                        initialCenter: const LatLng(19.0728, 72.8826),
-                        initialZoom: 11.0,
+                        initialCenter: const LatLng(18.5204, 73.8567), // Pune Matrix Nodes Active
+                        initialZoom: 12.0, // Slightly bumped up zoom to focus on the city core
                         maxZoom: 18.0,
-                        minZoom: 3.2, // Prevents excessive zooming out
-                        // Fixes Error 1: New v8 API to permanently lock vertical/latitudinal boundary leakages
+                        minZoom: 3.2,
                         cameraConstraint: const CameraConstraint.containLatitude(),
                       ),
                       children: [
