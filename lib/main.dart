@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-
-// Import local instrument views
+import 'package:latlong2/latlong.dart'; // Imports LatLng structure
 import 'weather.dart';
 import 'compass.dart';
 import 'calendar.dart';
@@ -28,6 +27,12 @@ class ThemeNotifier extends Notifier<bool> {
 
 final themeProvider = NotifierProvider<ThemeNotifier, bool>(() {
   return ThemeNotifier();
+});
+
+// TELEMETRY COORDINATE PROVIDER MATRIX
+// Sets Pune as the global factory boot default target
+final coordinateProvider = StateProvider<LatLng>((ref) {
+  return const LatLng(18.5204, 73.8567);
 });
 
 // --- 2. GLOBAL SYSTEM INITIALIZATION ---
@@ -87,11 +92,11 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
   ];
 
   final List<String> _navigationLabels = [
-    'WX',
+    'WEATHER',
     'COMPASS',
     'CALENDAR',
     'ARCADE',
-    'SYS',
+    'SETTING',
   ];
 
   @override

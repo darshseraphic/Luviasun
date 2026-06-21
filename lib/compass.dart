@@ -76,21 +76,29 @@ class _MapScreenState extends State<MapScreen> {
                 Expanded(
                   child: Container(
                     color: theme.mapCanvasBg, // Catches view bounds seamlessly
-                    child: FlutterMap(
-                      options: MapOptions(
-                        initialCenter: const LatLng(18.5204, 73.8567), // Pune Matrix Nodes Active
-                        initialZoom: 12.0, // Slightly bumped up zoom to focus on the city core
-                        maxZoom: 18.0,
-                        minZoom: 3.2,
-                        cameraConstraint: const CameraConstraint.containLatitude(),
-                      ),
-                      children: [
-                        TileLayer(
-                          urlTemplate: tileUrlTemplate,
-                          userAgentPackageName: 'com.darsheraphic.luviasun',
-                          // Fixes Error 2: Parameter removed from TileLayer to adhere to v8 layouts
-                        ),
-                      ],
+                    child: Consumer(
+                      builder: (context, mapRef, child) {
+                        // Dynamically intercepts user manual coordinate targets from settings
+                        final activeCoordinates = mapRef.watch(coordinateProvider);
+
+                        return FlutterMap(
+                          // Enforces a view refresh when coordinates alter state positions
+                          key: ValueKey('${activeCoordinates.latitude}_${activeCoordinates.longitude}'),
+                          options: MapOptions(
+                            initialCenter: activeCoordinates, // Hooks dynamic state coordinate matrix
+                            initialZoom: 12.0, // Focuses directly on the city core
+                            maxZoom: 18.0,
+                            minZoom: 3.2,
+                            cameraConstraint: const CameraConstraint.containLatitude(), // Locks vertical boundary leakages
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: tileUrlTemplate,
+                              userAgentPackageName: 'com.darsheraphic.luviasun',
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),

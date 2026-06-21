@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:latlong2/latlong.dart'; // Imports LatLng structure
 import 'dart:developer' as developer;
-import 'main.dart'; // Imports your global themeProvider flag
+import 'main.dart'; // Imports your global providers
 
 // --- 1. LOCAL THEME MATRIX SPECIFICATION ---
 class SettingsUiTheme {
@@ -31,8 +32,17 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  // Text Matrix Storage Hooks
+  final TextEditingController _latController = TextEditingController();
+  final TextEditingController _lngController = TextEditingController();
 
-  // --- EXTERNAL ROUTING ENGINES ---
+  @override
+  void dispose() {
+    _latController.dispose();
+    _lngController.dispose();
+    super.dispose();
+  }
+
   final Uri _websiteUrl = Uri.parse('https://www.github.com/darshseraphic/');
   final Uri _feedbackUrl = Uri.parse('https://darshseraphic.github.io/');
 
@@ -223,7 +233,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 32),
 
-              // [01] INTERFACE THEME TOGGLE (Custom Hardware-Accelerated UI Component)
+              // [01] INTERFACE THEME TOGGLE
               _buildMenuTile(
                 title: 'DARK THEME',
                 subtitle: isDark ? 'ACTIVE PROFILE // VERTICAL ABSOLUTE DARK' : 'ACTIVE PROFILE // VERTICAL ABSOLUTE LIGHT',
@@ -249,7 +259,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         height: 18,
                         decoration: BoxDecoration(
                           color: theme.textMain,
-                          shape: BoxShape.rectangle, // Inner indicator square
+                          shape: BoxShape.rectangle,
                         ),
                       ),
                     ),
@@ -259,7 +269,92 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
-              // [02] USER GUIDE
+              // [02] TELEMETRY COORDINATE OVERRIDE PANEL (Positioned dynamically below Theme and above User Guide)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: theme.ruleBorder, width: 0.8),
+                  color: Colors.transparent,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'MAP DEFAULT LOCATION',
+                      style: TextStyle(color: theme.textMain, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2.0),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _latController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.bold),
+                            cursorColor: theme.textMain,
+                            decoration: InputDecoration(
+                              labelText: 'LATITUDE',
+                              labelStyle: TextStyle(color: theme.textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.ruleBorder, width: 0.8), borderRadius: BorderRadius.zero),
+                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.textMain, width: 1.0), borderRadius: BorderRadius.zero),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _lngController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.bold),
+                            cursorColor: theme.textMain,
+                            decoration: InputDecoration(
+                              labelText: 'LONGITUDE',
+                              labelStyle: TextStyle(color: theme.textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.ruleBorder, width: 0.8), borderRadius: BorderRadius.zero),
+                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.textMain, width: 1.0), borderRadius: BorderRadius.zero),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () {
+                        final double? lat = double.tryParse(_latController.text);
+                        final double? lng = double.tryParse(_lngController.text);
+                        if (lat != null && lng != null) {
+                          // Updates Riverpod State Matrix globally
+                          ref.read(coordinateProvider.notifier).state = LatLng(lat, lng);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              backgroundColor: theme.textMain,
+                              duration: const Duration(seconds: 2),
+                              content: Text('TARGET ENGAGED: [$lat, $lng]', style: TextStyle(color: theme.canvasBg, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        color: theme.textMain,
+                        alignment: Alignment.center,
+                        child: Text(
+                          'SUBMIT TARGET TELEMETRY',
+                          style: TextStyle(color: theme.canvasBg, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // [03] USER GUIDE
               _buildMenuTile(
                 title: 'USER GUIDE',
                 subtitle: 'HOW TO USE THE APP EFFECTIVELY',
@@ -271,7 +366,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
-              // [03] DATA SECURITY
+              // [04] DATA SECURITY
               _buildMenuTile(
                 title: 'DATA SECURITY',
                 subtitle: 'MORE INFORMATION ABOUT THE APP AND RELATED TO USER',
@@ -283,7 +378,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
-              // [04] PRIVACY POLICY
+              // [05] PRIVACY POLICY
               _buildMenuTile(
                 title: 'PRIVACY PROTOCOLS',
                 subtitle: 'AIR-GAPPED HARDWARE ISOLATION',
@@ -295,7 +390,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
-              // [05] WEBSITE ROUTING
+              // [06] WEBSITE ROUTING
               _buildMenuTile(
                 title: 'GITHUB',
                 subtitle: 'SEE AUTHOR GITHUB PROFILE AND MORE',
@@ -307,7 +402,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
-              // [06] FEEDBACK ROUTING
+              // [07] FEEDBACK ROUTING
               _buildMenuTile(
                 title: 'OTHER APPS',
                 subtitle: 'VIEW MORE APPS BUILD BY THE SAME PERSON',
