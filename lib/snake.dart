@@ -20,7 +20,8 @@ class SnakeUiTheme {
     textMain = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     textSub = isDark ? const Color(0xFF737373) : const Color(0xFF404040);
     ruleBorder = isDark ? const Color(0xFF1F1F1F) : const Color(0xFFE5E5E5);
-    panelBg = isDark ? const Color(0xFF0A0A0A) : const Color(0xFFF5F5F5);
+    // Updated to pure black and pure white
+    panelBg = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
   }
 }
 
@@ -96,7 +97,7 @@ class SnakeScreen extends ConsumerStatefulWidget {
 class _SnakeScreenState extends ConsumerState<SnakeScreen> {
   static const int _gridSizeX = 20;
   static const int _gridSizeY = 28;
-  static const String _boxName = 'luviasun';
+  static const String _boxName = 'Luviasun';
 
   Timer? _gameLoop;
   bool _isPlaying = false;
@@ -282,8 +283,13 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'FULLSCREEN SNAKE ENGINE',
-                  style: TextStyle(color: theme.textMain, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.02),
+                  'SNAKE',
+                  style: TextStyle(
+                    color: theme.textMain,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2.0,
+                  ),
                 ),
 
                 const SizedBox(height: 16),
