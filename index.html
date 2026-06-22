@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>\\\ LUVIASUN</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+
+/* IRONCLAD 90-DEGREE ZERO-CURVE SCROLLBAR OVERRIDE */
+        ::-webkit-scrollbar {
+            width: 8px !important;       /* Hard lock vertical size */
+            height: 8px !important;      /* Hard lock horizontal size */
+            background: var(--bg) !important;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg) !important; 
+            border-left: 1px solid var(--border-sub) !important;
+            border-radius: 0 !important; /* Force absolute 90-degree track */
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border) !important; 
+            border-radius: 0 !important; /* Force absolute 90-degree slider block */
+            border: none !important;     /* Kill any inner OS canvas padding curves */
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-sub) !important;
+        }
+
+        /* Global non-WebKit (Firefox) engine alignment */
+        * {
+            scrollbar-width: thin !important;
+            scrollbar-color: var(--border) var(--bg) !important;
+            border-radius: 0 !important; /* Re-verify entire DOM has zero curves */
+        }
+
+
+        /* BASE MATRIX SETTING - BRUTALIST SANS-SERIF OVERRIDE */
+        :root {
+            --bg: #000000;
+            --text: #FFFFFF;
+            --border: #FFFFFF;
+            --border-sub: #333333;
+            --highlight: rgba(255, 255, 255, 0.1);
+            --font-stack: Arial, "Helvetica Neue", Helvetica, sans-serif;
+            
+            /* Selection Variables */
+            --selection-bg: #ffffff !important;
+            --selection-text: #000000 !important;
+        }
+
+        html.light-mode,
+        .light-mode,
+        [data-theme*="light"] {
+            --bg: #FFFFFF;
+            --text: #000000;
+            --border: #000000;
+            --border-sub: #E5E5E5;
+            --highlight: rgba(0, 0, 0, 0.05);
+            
+            /* Selection Variables */
+            --selection-bg: #000000 !important;
+            --selection-text: #ffffff !important;
+        }
+
+        /* Text Selection Pseudo-elements */
+        ::selection {
+            background-color: var(--selection-bg) !important;
+            color: var(--selection-text) !important;
+        }
+
+        ::-moz-selection {
+            background-color: var(--selection-bg) !important;
+            color: var(--selection-text) !important;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            border-radius: 0 !important; /* Zero curves restriction strictly enforced */
+            font-family: var(--font-stack);
+            font-weight: 700; /* Chunky brutalist typography weight */
+            text-transform: uppercase; /* Forced scannable uppercase matrix */
+            transition: none !important; /* Instant frame transformations */
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background-color: var(--bg);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            font-size: clamp(11px, 0.85vw + 8px, 16px); /* Fluid scale font size explicitly */
+            line-height: 1.4;
+            letter-spacing: 0.05em;
+        }
+
+        /* PERSISTENT RUNTIME TOP BAR */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 56px;
+            background-color: var(--bg);
+            border-bottom: 2px solid var(--border);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            flex-wrap: nowrap; /* Enforced single-line constraints */
+            gap: 10px;
+        }
+
+        .brand-token {
+            font-weight: 900;
+            font-size: clamp(13px, 1.2vw + 10px, 20px); /* Responsive branding font size */
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+            position: relative;
+            flex-wrap: nowrap; /* Tightly grouping items on the right side */
+            align-items: center;
+        }
+
+        button, select {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 8px 16px;
+            font-size: clamp(9px, 0.6vw + 8px, 13px); /* Responsive button sizing */
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            outline: none;
+            white-space: nowrap;
+        }
+
+        button:hover, select:hover, select:focus {
+            background-color: var(--text);
+            color: var(--bg);
+        }
+
+        /* CUSTOM BRUTALIST DROPDOWN LAYOUT STRUCTURE */
+        .custom-select-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .location-drop-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 2px);
+            left: 0;
+            background-color: var(--bg);
+            border: 2px solid var(--border);
+            min-width: 100%;
+            z-index: 1005;
+        }
+
+        .location-drop-menu.active {
+            display: block;
+        }
+
+        .location-option {
+            padding: 8px 16px;
+            font-size: clamp(9px, 0.6vw + 8px, 13px);
+            font-weight: 900;
+            cursor: pointer;
+            background-color: var(--bg);
+            color: var(--text);
+            border-bottom: 2px solid var(--border-sub);
+            white-space: nowrap;
+        }
+
+        .location-option:last-child {
+            border-bottom: none;
+        }
+
+        /* Absolute color inversion on hover to block out browser select overrides */
+        .location-option:hover {
+            background-color: var(--text) !important;
+            color: var(--bg) !important;
+        }
+
+@media (max-width: 768px) {
+    header {
+        padding: 10px 12px;
+        flex-wrap: nowrap !important; /* Strictly forbid wrapping into rows */
+        justify-content: space-between;
+        overflow: visible; /* FIXED: Changed from hidden to visible to show drop-menu dropdown elements */
+    }
+
+    .brand-token {
+        font-size: 15px;
+        flex-shrink: 0; /* Keep the logo from shrinking */
+    }
+
+    .nav-controls {
+        display: flex;
+        flex-wrap: nowrap !important; /* Force items strictly inline */
+        gap: 6px;
+        justify-content: flex-end;
+        min-width: 0; /* Enable internal shrinking mechanics */
+        flex-grow: 1;
+    }
+
+    button, select {
+        padding: 6px 8px;
+        font-size: 10px;
+        letter-spacing: 0.02em;
+        flex-shrink: 0; /* FIXED: Prevents interactive elements from completely collapsing to 0 width */
+    }
+
+    .location-option {
+        padding: 6px 8px;
+        font-size: 10px;
+        letter-spacing: 0.02em;
+    }
+
+    button {
+        /* Smooth Brutalist Text Truncation restricted strictly to buttons to preserve native select configurations */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; 
+    }
+
+    .drop-menu {
+        width: 280px; /* FIXED: Scaled down slightly to guarantee screen real-estate alignment */
+        max-width: calc(100vw - 24px); /* FIXED: Ironclad bounds restriction layout logic to prevent horizontal overflow */
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 8px 8px;
+    }
+    
+    .brand-token {
+        font-size: 13px;
+    }
+
+    button, select {
+        padding: 6px 4px;
+        font-size: 9px;
+    }
+
+    .location-option {
+        padding: 6px 4px;
+        font-size: 9px;
+    }
+}
+
+        /* CUSTOM NAVIGATION DROP-MENU */
+        .drop-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 2px);
+            right: 0;
+            background-color: var(--bg);
+            border: 2px solid var(--border);
+            width: 320px;
+            box-shadow: none;
+            z-index: 1001;
+        }
+
+        .drop-menu.active {
+            display: block;
+        }
+
+        .drop-menu a {
+            display: block;
+            color: var(--text);
+            text-decoration: none;
+            padding: 12px 16px;
+            font-size: 11px;
+            border-bottom: 2px solid var(--border-sub);
+        }
+
+        .drop-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .drop-menu a:hover {
+            background-color: var(--text);
+            color: var(--bg);
+        }
+
+        /* VIEWPORT STRUCTURAL SHELL */
+        .viewport-section {
+            min-height: 100vh;
+            width: 100vw;
+            padding: 80px 20px 40px 20px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .section-header {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .section-title {
+            font-size: clamp(18px, 1.5vw + 12px, 28px); /* Fluid scale section titles */
+            font-weight: 900;
+        }
+
+        /* GRID AND METRIC ARCHITECTURES */
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+        }
+
+        .data-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .data-matrix th, .data-matrix td {
+            border: 2px solid var(--border-sub);
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .data-matrix th {
+            font-weight: 900;
+            background-color: var(--highlight);
+            font-size: 11px;
+        }
+
+        .large-telemetry {
+            font-size: clamp(36px, 4vw + 20px, 64px); /* Responsive dynamic metrics text */
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        /* SCREEN SPECIFIC LAYOUT CONSTRAINTS */
+        #screen1 {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .hero-title {
+            font-size: 14vw;
+            font-weight: 900;
+            line-height: 0.8;
+            letter-spacing: -0.05em;
+            margin-bottom: 20px;
+        }
+
+        .log-terminal {
+            background-color: var(--bg);
+            border: 2px solid var(--border);
+            padding: 16px;
+            flex-grow: 1;
+            font-size: 11px;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+        .log-entry {
+            margin-bottom: 6px;
+            white-space: pre-wrap;
+        }
+        .log-success { color: #00FF00; }
+        .light-mode .log-success { color: #008800; }
+
+        #map-container {
+            width: 100%;
+            flex-grow: 1;
+            min-height: 450px;
+            border: 2px solid var(--border);
+        }
+
+        /* KINETIC SNAKE CORE UNIT */
+        #snake-container {
+            width: 100%;
+            flex-grow: 1;
+            min-height: 450px;
+            border: 2px solid var(--border);
+            position: relative;
+            background-color: var(--bg);
+        }
+        #snakeCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* Prevents default browser scroll interference during gestures */
+        }
+        .snake-score-board {
+            font-size: 18px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            border: 2px solid var(--border);
+            padding: 6px 16px;
+            display: inline-block;
+        }
+
+        .raw-stream {
+            width: 100%;
+            flex-grow: 1;
+            background-color: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 16px;
+            font-size: 11px;
+            resize: none;
+            white-space: pre;
+            overflow: auto;
+            
+            /* ABSOLUTE FIX FOR FOCUS BORDER GLITCH */
+            outline: none;
+        }
+
+        /* MAINTAIN BRUTALIST ALIGNMENT ON ACTIVE FOCUS */
+        .raw-stream:focus {
+            outline: none;
+            border-color: var(--border);
+        }
+
+        /* GLOBAL HARDWARE FOOTER LAYOUT */
+        footer {
+            border-top: 2px solid var(--border);
+            background-color: var(--bg);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        .footer-module {
+            border-right: 2px solid var(--border);
+            border-bottom: 2px solid var(--border);
+            padding: 24px;
+            text-align: left;
+            cursor: pointer;
+        }
+        .footer-module:last-child { border-right: none; }
+        .footer-module h4 {
+            font-size: 11px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+        .footer-module a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 900;
+            display: block;
+        }
+        
+        /* INVERSION HOVER PATTERN FOR INTERACTIVE LINK BOXES */
+        .footer-module:hover {
+            background-color: var(--text) !important;
+            color: var(--bg) !important;
+        }
+        .footer-module:hover h4 {
+            color: var(--bg) !important;
+            opacity: 0.8;
+        }
+        .footer-module:hover a {
+            color: var(--bg) !important;
+            text-decoration: underline;
+        }
+
+        .pulse-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #8B0000;
+            margin-right: 8px;
+            animation: blink 1s steps(2, start) infinite;
+        }
+        @keyframes blink { to { visibility: hidden; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-token">\\\ LUVIASUN</div>
+        <div class="nav-controls">
+            <div class="custom-select-container">
+                <button id="location-trigger-btn" onclick="toggleLocationMenu(event)">PUNE ▾</button>
+                <div class="location-drop-menu" id="location-custom-menu">
+                    <div class="location-option" onclick="pickLocation('pune', 'PUNE ▾')">PUNE</div>
+                    <div class="location-option" onclick="pickLocation('france', 'PARIS ▾')">PARIS</div>
+                </div>
+            </div>
+            
+            <button id="theme-toggle" onclick="toggleTheme()">DARK</button>
+            <button onclick="toggleMenu()">INDEX</button>
+            <div class="drop-menu" id="nav-menu">
+                <a href="#screen1" onclick="toggleMenu()">[01] Terminal Landing</a>
+                <a href="#screen2" onclick="toggleMenu()">[02] System Initialization Log</a>
+                <a href="#screen3" onclick="toggleMenu()">[03] Interactive Map Profile</a>
+                <a href="#screen-snake" onclick="toggleMenu()">[3B] Kinetic Training Vector (Snake)</a>
+                <a href="#screen4" onclick="toggleMenu()">[04] Real-Time Weather Array</a>
+                <a href="#screen5" onclick="toggleMenu()">[05] 3-Day Climatology Matrix</a>
+                <a href="#screen6" onclick="toggleMenu()">[06] Predictive Weather Vector</a>
+                <a href="#screen7" onclick="toggleMenu()">[07] Auxiliary Atmospheric Indices</a>
+                <a href="#screen8" onclick="toggleMenu()">[08] Raw API Payload Core Stream</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="screen1" class="viewport-section">
+        <h1 class="hero-title">LUVIASUN</h1>
+        <p style="letter-spacing: 0.2em; font-size: 12px;">
+            <span class="pulse-dot"></span>SYSTEM CONFIGURATION: LIVE TELEMETRY LOGIC TERMINAL // ACTIVE LAYER INTERFACE
+        </p>
+    </section>
+
+    <section id="screen2" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">System Initialization Log</h2>
+        </div>
+        <div class="log-terminal" id="log-terminal">
+            <div class="log-entry">[SYSTEM] Initializing LUVIASUN Core Engine Runtime Environment...</div>
+            <div class="log-entry">[SYSTEM] Swapping typography metrics to raw high-contrast Sans-Serif architecture layout.</div>
+            <div class="log-entry">[SYSTEM] Brand identity initialized: logo assignment '\\\' parsed successfully.</div>
+            <div class="log-entry">[DATA] Geolocation nodes parsed: Pune, IN Core (18.5204° N, 73.8567° E) | Paris, FR Core (Eiffel Tower Pin: 48.8584° N, 2.2945° E).</div>
+        </div>
+    </section>
+
+    <section id="screen3" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">Interactive Map Profile</h2>
+        </div>
+        <div id="map-container"></div>
+    </section>
+
+    <section id="screen-snake" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">Kinetic Training Vector</h2>
+        </div>
+        <div>
+            <div class="snake-score-board">FRUITS ASSIMILATED: <span id="snake-score">0</span></div>
+        </div>
+        <div id="snake-container">
+            <canvas id="snakeCanvas"></canvas>
+        </div>
+    </section>
+
+    <section id="screen4" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">Real-Time Weather Array</h2>
+        </div>
+        <div class="weather-grid">
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">PUNE (IN)</h3>
+                <div class="large-telemetry" id="pune-temp">--°C</div>
+                <table class="data-matrix">
+                    <thead>
+                        <tr>
+                            <th>Telemetry Vector Parameter Description</th>
+                            <th>Absolute Instrument Value Target</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Apparent (Feels Like) Temperature Indication</td><td id="pune-apparent">--°C</td></tr>
+                        <tr><td>Relative Atmospheric Humidity Metric</td><td id="pune-humidity">--%</td></tr>
+                        <tr><td>Precipitation Accumulation Volume</td><td id="pune-rain">-- mm</td></tr>
+                        <tr><td>Barometric Surface Pressure Line</td><td id="pune-pressure">-- hPa</td></tr>
+                        <tr><td>Wind Gust Velocity Absolute Bounds</td><td id="pune-gusts">-- km/h</td></tr>
+                        <tr><td>UV Exposure Radiation Index Level</td><td id="pune-uv">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">PARIS (FR)</h3>
+                <div class="large-telemetry" id="paris-temp">--°C</div>
+                <table class="data-matrix">
+                    <thead>
+                        <tr>
+                            <th>Telemetry Vector Parameter Description</th>
+                            <th>Absolute Instrument Value Target</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Apparent (Feels Like) Temperature Indication</td><td id="paris-apparent">--°C</td></tr>
+                        <tr><td>Relative Atmospheric Humidity Metric</td><td id="paris-humidity">--%</td></tr>
+                        <tr><td>Precipitation Accumulation Volume</td><td id="paris-rain">-- mm</td></tr>
+                        <tr><td>Barometric Surface Pressure Line</td><td id="paris-pressure">-- hPa</td></tr>
+                        <tr><td>Wind Gust Velocity Absolute Bounds</td><td id="paris-gusts">-- km/h</td></tr>
+                        <tr><td>UV Exposure Radiation Index Level</td><td id="paris-uv">--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="screen5" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">Historical 3 Day Climatology Matrix</h2>
+        </div>
+        <div class="weather-grid">
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">NODE: PUNE (IN)</h3>
+                <table class="data-matrix" id="pune-hist-table">
+                    <thead>
+                        <tr>
+                            <th>Temporal Signature Timestamp</th>
+                            <th>Max Temperature (Bound)</th>
+                            <th>Min Temperature (Bound)</th>
+                            <th>Integrated Precipitation Sum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">NODE: PARIS (FR)</h3>
+                <table class="data-matrix" id="paris-hist-table">
+                    <thead>
+                        <tr>
+                            <th>Temporal Signature Timestamp</th>
+                            <th>Max Temperature (Bound)</th>
+                            <th>Min Temperature (Bound)</th>
+                            <th>Integrated Precipitation Sum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="screen6" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">Predictive 3 Day Weather Vector</h2>
+        </div>
+        <div class="weather-grid">
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">NODE: PUNE (IN)</h3>
+                <table class="data-matrix" id="pune-forecast-table">
+                    <thead>
+                        <tr>
+                            <th>Temporal Vector Baseline</th>
+                            <th>Max Temperature Target</th>
+                            <th>Min Temperature Target</th>
+                            <th>Probability Distribution Max %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">NODE: PARIS (FR)</h3>
+                <table class="data-matrix" id="paris-forecast-table">
+                    <thead>
+                        <tr>
+                            <th>Temporal Vector Baseline</th>
+                            <th>Max Temperature Target</th>
+                            <th>Min Temperature Target</th>
+                            <th>Probability Distribution Max %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>--</td><td>--</td><td>--</td><td>--</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="screen7" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">Auxiliary Atmospheric Indices</h2>
+        </div>
+        <div class="weather-grid">
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">NODE: PUNE (IN)</h3>
+                <table class="data-matrix">
+                    <thead>
+                        <tr>
+                            <th>Atmospheric Boundary Layer Index Metric</th>
+                            <th>Value Segment Analysis Performance Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Low-Altitude Layer Cloud Cover Coverage</td><td id="pune-aux-cloud-low">--%</td></tr>
+                        <tr><td>Mid-Altitude Layer Cloud Cover Coverage</td><td id="pune-aux-cloud-mid">--%</td></tr>
+                        <tr><td>High-Altitude Layer Cloud Cover Coverage</td><td id="pune-aux-cloud-high">--%</td></tr>
+                        <tr><td>Aggregated Integrated Daily Sunshine Duration</td><td id="pune-aux-sunshine">-- seconds</td></tr>
+                        <tr><td>Wind Velocity Vectors / Altitude Vector Line Profile (180m)</td><td id="pune-aux-wind">-- km/h (--°)</td></tr>
+                        <tr><td>Soil Temperature Stratum Layer (0-10cm)</td><td id="pune-aux-soil-temp">--°C</td></tr>
+                        <tr><td>Evapotranspiration Loss Flux</td><td id="pune-aux-evapo">-- mm</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h3 style="margin-bottom: 15px; border-bottom: 2px solid var(--border-sub); padding-bottom: 5px;">NODE: PARIS (FR)</h3>
+                <table class="data-matrix">
+                    <thead>
+                        <tr>
+                            <th>Atmospheric Boundary Layer Index Metric</th>
+                            <th>Value Segment Analysis Performance Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Low-Altitude Layer Cloud Cover Coverage</td><td id="paris-aux-cloud-low">--%</td></tr>
+                        <tr><td>Mid-Altitude Layer Cloud Cover Coverage</td><td id="paris-aux-cloud-mid">--%</td></tr>
+                        <tr><td>High-Altitude Layer Cloud Cover Coverage</td><td id="paris-aux-cloud-high">--%</td></tr>
+                        <tr><td>Aggregated Integrated Daily Sunshine Duration</td><td id="paris-aux-sunshine">-- seconds</td></tr>
+                        <tr><td>Wind Velocity Vectors / Altitude Vector Line Profile (180m)</td><td id="paris-aux-wind">-- km/h (--°)</td></tr>
+                        <tr><td>Soil Temperature Stratum Layer (0-10cm)</td><td id="paris-aux-soil-temp">--°C</td></tr>
+                        <tr><td>Evapotranspiration Loss Flux</td><td id="paris-aux-evapo">-- mm</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="screen8" class="viewport-section">
+        <div class="section-header">
+            <h2 class="section-title">Raw API Payload Core Stream</h2>
+        </div>
+        <textarea class="raw-stream" id="json-textarea" readonly>Executing API communication routing... Awaiting response string frame array logs.</textarea>
+    </section>
+
+    <footer>
+        <div class="footer-module" onclick="window.location.hash='#'">
+            <h4>Download Engine</h4>
+            <a href="#">MANIFEST.bin</a>
+        </div>
+        <div class="footer-module" onclick="window.location.hash='#'">
+            <h4>Source Tree Repository</h4>
+            <a href="#">/src/core/luviasun</a>
+        </div>
+        <div class="footer-module" onclick="window.open('https://github.com/luviasun', '_blank')">
+            <h4>Developer Profile Matrix</h4>
+            <a href="#">github.com/luviasun</a>
+        </div>
+        <div class="footer-module" onclick="window.location.hash='#'">
+            <h4>Auxiliary Modules</h4>
+            <a href="#">More Terminal Framework Apps</a>
+        </div>
+    </footer>
+
+    <script>
+        // GEOGRAPHIC COORD CONSTANTS MAP - Paris optimized to center the Eiffel Tower
+        const NODES = {
+            pune: { lat: 18.5204, lon: 73.8567, label: "PUNE, INDIA CORE" },
+            france: { lat: 48.8584, lon: 2.2945, label: "PARIS, FRANCE CORE (EIFFEL TOWER)" }
+        };
+
+        let activeNodeKey = 'pune';
+        let globalThemeState = 'dark';
+        let mapInstance = null;
+        let tileLayerInstance = null;
+
+        const tileURLs = {
+            dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+        };
+
+        function appendLog(message, styleClass = '') {
+            const terminal = document.getElementById('log-terminal');
+            if (terminal) {
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${styleClass}`;
+                entry.innerText = `[${new Date().toISOString()}] ${message}`;
+                terminal.appendChild(entry);
+                terminal.scrollTop = terminal.scrollHeight;
+            }
+        }
+
+        function toggleMenu() {
+            document.getElementById('nav-menu').classList.toggle('active');
+            // Dismiss location menu when index navigation opens
+            document.getElementById('location-custom-menu').classList.remove('active');
+        }
+
+        /* CUSTOM LOCATION MENU DISPATCH INTERFACES */
+        function toggleLocationMenu(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('location-custom-menu').classList.toggle('active');
+            document.getElementById('nav-menu').classList.remove('active');
+        }
+
+        function pickLocation(value, label) {
+            document.getElementById('location-trigger-btn').innerText = label;
+            switchLocationContext(value);
+            document.getElementById('location-custom-menu').classList.remove('active');
+        }
+
+        // Global DOM framework ambient click catcher to shut down drop context elements
+        window.addEventListener('click', function(e) {
+            const container = document.querySelector('.custom-select-container');
+            if (container && !container.contains(e.target)) {
+                document.getElementById('location-custom-menu').classList.remove('active');
+            }
+        });
+
+        function toggleTheme() {
+            const htmlElement = document.documentElement;
+            const body = document.body;
+            const themeBtn = document.getElementById('theme-toggle');
+            
+            if (globalThemeState === 'dark') {
+                body.classList.add('light-theme');
+                body.classList.add('light-mode');
+                htmlElement.classList.add('light-mode');
+                globalThemeState = 'light';
+                themeBtn.innerText = 'DARK';
+                appendLog('[SYSTEM] Theme modification parsed: Light variant rendered.');
+            } else {
+                body.classList.remove('light-theme');
+                body.classList.remove('light-mode');
+                htmlElement.classList.remove('light-mode');
+                globalThemeState = 'dark';
+                themeBtn.innerText = 'LIGHT';
+                appendLog('[SYSTEM] Theme modification parsed: Dark variant rendered.');
+            }
+
+            if (mapInstance && tileLayerInstance) {
+                mapInstance.removeLayer(tileLayerInstance);
+                tileLayerInstance = L.tileLayer(tileURLs[globalThemeState], {
+                    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                });
+                tileLayerInstance.addTo(mapInstance);
+                appendLog('[MAP] Tile layers hot-swapped dynamically.');
+            }
+            renderSnakeGraphicsFrame();
+        }
+
+        function initMapSystem() {
+            const node = NODES[activeNodeKey];
+            mapInstance = L.map('map-container', {
+                zoomControl: false,
+                attributionControl: false
+            }).setView([node.lat, node.lon], 14);
+
+            tileLayerInstance = L.tileLayer(tileURLs[globalThemeState], {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+            });
+            tileLayerInstance.addTo(mapInstance);
+
+            const squareIcon = L.divIcon({
+                className: 'custom-brutalist-marker',
+                html: `<div style="background: transparent; border: 3px solid #8B0000; width: 16px; height: 16px;"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+
+            L.marker([node.lat, node.lon], { icon: squareIcon }).addTo(mapInstance);
+            appendLog(`[MAP] Instance locked onto coordinate cluster: ${node.label}`);
+        }
+
+        function switchLocationContext(targetValue) {
+            activeNodeKey = targetValue;
+            const node = NODES[activeNodeKey];
+            appendLog(`[CONTEXT] Swapping absolute geographic target context -> ${node.label}`);
+            
+            if (mapInstance) {
+                mapInstance.setView([node.lat, node.lon], 14);
+                mapInstance.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) {
+                        mapInstance.removeLayer(layer);
+                    }
+                });
+                const squareIcon = L.divIcon({
+                    className: 'custom-brutalist-marker',
+                    html: `<div style="background: transparent; border: 3px solid #8B0000; width: 16px; height: 16px;"></div>`,
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8]
+                });
+                L.marker([node.lat, node.lon], { icon: squareIcon }).addTo(mapInstance);
+            }
+        }
+
+        async function fetchWeatherTelemetryMatrix() {
+            const puneNode = NODES.pune;
+            const parisNode = NODES.france;
+
+            const puneURL = `https://api.open-meteo.com/v1/forecast?latitude=${puneNode.lat}&longitude=${puneNode.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,rain,surface_pressure,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,rain,cloud_cover_low,cloud_cover_mid,cloud_cover_high,sunshine_duration,wind_direction_180m,wind_speed_180m,soil_temperature_0_to_10cm,evapotranspiration&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,precipitation_probability_max&past_days=3&forecast_days=3&timezone=auto`;
+            const parisURL = `https://api.open-meteo.com/v1/forecast?latitude=${parisNode.lat}&longitude=${parisNode.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,rain,surface_pressure,wind_gusts_10m&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,rain,cloud_cover_low,cloud_cover_mid,cloud_cover_high,sunshine_duration,wind_direction_180m,wind_speed_180m,soil_temperature_0_to_10cm,evapotranspiration&daily=temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_sum,precipitation_probability_max&past_days=3&forecast_days=3&timezone=auto`;
+
+            try {
+                appendLog(`[NETWORK] Querying cluster endpoints for synchronized global array fetch...`);
+                
+                const [puneRes, parisRes] = await Promise.all([fetch(puneURL), fetch(parisURL)]);
+                if (!puneRes.ok || !parisRes.ok) throw new Error("HTTP Stream Communications Interrupted.");
+
+                const puneData = await puneRes.json();
+                const parisData = await parisRes.json();
+                
+                appendLog('[NETWORK] Whole raw multi-parameter API data blocks synchronized for both matrices.', 'log-success');
+                appendLog(`[PARIS WEATHER TELEMETRY LOG] TEMP: ${parisData.current.temperature_2m}°C | HUMIDITY: ${parisData.current.relative_humidity_2m}% | APPARENT: ${parisData.current.apparent_temperature}°C | RAIN: ${parisData.current.rain}mm | PRESSURE: ${parisData.current.surface_pressure}hPa | GUSTS: ${parisData.current.wind_gusts_10m}km/h`, 'log-success');
+
+                populateTelemetryInterface(puneData, parisData);
+            } catch (error) {
+                appendLog(`[CRITICAL] Processing stream broken: ${error.message}`, 'log-error');
+                document.getElementById('json-textarea').value = `EXECUTION FAULT:\n${error.message}`;
+            }
+        }
+
+        function populateTableRows(tableId, data, startIdx, endIdx, isForecast) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const body = table.getElementsByTagName('tbody')[0];
+            if (!body) return;
+            body.innerHTML = '';
+            for(let i = startIdx; i < endIdx; i++) {
+                const row = body.insertRow();
+                row.insertCell(0).innerText = data.daily.time[i] || '--';
+                row.insertCell(1).innerText = `${data.daily.temperature_2m_max[i] !== undefined ? data.daily.temperature_2m_max[i] : '--'}°C`;
+                row.insertCell(2).innerText = `${data.daily.temperature_2m_min[i] !== undefined ? data.daily.temperature_2m_min[i] : '--'}°C`;
+                if(!isForecast) {
+                    row.insertCell(3).innerText = `${data.daily.precipitation_sum[i] !== undefined ? data.daily.precipitation_sum[i] : '--'} mm`;
+                } else {
+                    row.insertCell(3).innerText = `${data.daily.precipitation_probability_max[i] !== undefined ? data.daily.precipitation_probability_max[i] : '0'}%`;
+                }
+            }
+        }
+
+        function populateAuxIndices(prefix, data) {
+            const currentHourString = data.current.time.substring(0, 13) + ":00";
+            const hourlyIndex = data.hourly.time.indexOf(currentHourString) !== -1 ? data.hourly.time.indexOf(currentHourString) : 0;
+
+            document.getElementById(`${prefix}-aux-cloud-low`).innerText = `${data.hourly.cloud_cover_low[hourlyIndex]}%`;
+            document.getElementById(`${prefix}-aux-cloud-mid`).innerText = `${data.hourly.cloud_cover_mid[hourlyIndex]}%`;
+            document.getElementById(`${prefix}-aux-cloud-high`).innerText = `${data.hourly.cloud_cover_high[hourlyIndex]}%`;
+            document.getElementById(`${prefix}-aux-sunshine`).innerText = `${data.hourly.sunshine_duration[hourlyIndex]} SEC`;
+            document.getElementById(`${prefix}-aux-wind`).innerText = `${data.hourly.wind_speed_180m[hourlyIndex]} KM/H (${data.hourly.wind_direction_180m[hourlyIndex]}°)`;
+            document.getElementById(`${prefix}-aux-soil-temp`).innerText = `${data.hourly.soil_temperature_0_to_10cm[hourlyIndex]}°C`;
+            document.getElementById(`${prefix}-aux-evapo`).innerText = `${data.hourly.flux_evapotranspiration !== undefined ? data.hourly.flux_evapotranspiration : (data.hourly.evapotranspiration ? data.hourly.evapotranspiration[hourlyIndex] : '--')} mm`;
+        }
+
+        function populateTelemetryInterface(puneData, parisData) {
+            // Textarea mapping multi-node data directly
+            document.getElementById('json-textarea').value = JSON.stringify({ NODE_PUNE: puneData, NODE_PARIS: parisData }, null, 4);
+
+            // Populate Pune Weather Array
+            document.getElementById('pune-temp').innerText = `${puneData.current.temperature_2m}°C`;
+            document.getElementById('pune-apparent').innerText = `${puneData.current.apparent_temperature}°C`;
+            document.getElementById('pune-humidity').innerText = `${puneData.current.relative_humidity_2m}%`;
+            document.getElementById('pune-rain').innerText = `${puneData.current.rain} mm`;
+            document.getElementById('pune-pressure').innerText = `${puneData.current.surface_pressure} hPa`;
+            document.getElementById('pune-gusts').innerText = `${puneData.current.wind_gusts_10m} km/h`;
+            document.getElementById('pune-uv').innerText = `${puneData.daily.uv_index_max[3] || 'N/A'}`;
+
+            // Populate Paris Weather Array
+            document.getElementById('paris-temp').innerText = `${parisData.current.temperature_2m}°C`;
+            document.getElementById('paris-apparent').innerText = `${parisData.current.apparent_temperature}°C`;
+            document.getElementById('paris-humidity').innerText = `${parisData.current.relative_humidity_2m}%`;
+            document.getElementById('paris-rain').innerText = `${parisData.current.rain} mm`;
+            document.getElementById('paris-pressure').innerText = `${parisData.current.surface_pressure} hPa`;
+            document.getElementById('paris-gusts').innerText = `${parisData.current.wind_gusts_10m} km/h`;
+            document.getElementById('paris-uv').innerText = `${parisData.daily.uv_index_max[3] || 'N/A'}`;
+
+            // Historical Array Matrices Population
+            populateTableRows('pune-hist-table', puneData, 0, 3, false);
+            populateTableRows('paris-hist-table', parisData, 0, 3, false);
+
+            // Forecast Array Matrices Population
+            populateTableRows('pune-forecast-table', puneData, 4, 7, true);
+            populateTableRows('paris-forecast-table', parisData, 4, 7, true);
+
+            // Auxiliary Stratum Indices Population
+            populateAuxIndices('pune', puneData);
+            populateAuxIndices('paris', parisData);
+
+            appendLog('[SYSTEM] UI matrix parameters updated across structural nodes.', 'log-success');
+        }
+
+        // --- KINETIC SNAKE ENGINE MODULE CONTEXT ---
+        const canvas = document.getElementById('snakeCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('snake-score');
+
+        const gridBlockSize = 20;
+        let columnsCount = 0;
+        let rowsCount = 0;
+
+        let snakeArray = [];
+        let fruitNode = {x: 5, y: 5};
+        let movementDX = 1;
+        let movementDY = 0;
+        let accumulatedScore = 0;
+        let gameLoopTicker = null;
+
+        function resizeSnakeCanvas() {
+            const container = document.getElementById('snake-container');
+            if (container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight || 450;
+                columnsCount = Math.floor(canvas.width / gridBlockSize);
+                rowsCount = Math.floor(canvas.height / gridBlockSize);
+            }
+        }
+
+        function initializeSnakeGame() {
+            resizeSnakeCanvas();
+            
+            // Safe fallback center points
+            const startX = Math.floor(columnsCount / 2) || 10;
+            const startY = Math.floor(rowsCount / 2) || 10;
+            
+            snakeArray = [
+                {x: startX, y: startY},
+                {x: startX - 1, y: startY},
+                {x: startX - 2, y: startY}
+            ];
+            
+            generateRandomFruitLocation();
+            movementDX = 1;
+            movementDY = 0;
+            accumulatedScore = 0;
+            scoreElement.innerText = accumulatedScore;
+            
+            if(gameLoopTicker) clearInterval(gameLoopTicker);
+            gameLoopTicker = setInterval(executeSnakeTickLoop, 100);
+        }
+
+        function generateRandomFruitLocation() {
+            fruitNode.x = Math.floor(Math.random() * columnsCount);
+            fruitNode.y = Math.floor(Math.random() * rowsCount);
+            
+            // Prevent fruit from spawning inside snake logic structures
+            for (let segment of snakeArray) {
+                if (segment.x === fruitNode.x && segment.y === fruitNode.y) {
+                    generateRandomFruitLocation();
+                    break;
+                }
+            }
+        }
+
+        function executeSnakeTickLoop() {
+            if (columnsCount === 0 || rowsCount === 0) return;
+
+            // Compute projected head translation coordinate vectors
+            let nextX = snakeArray[0].x + movementDX;
+            let nextY = snakeArray[0].y + movementDY;
+
+            // INFINITE WALL RE-ENTRY FRAME MODULO LOGIC
+            if (nextX >= columnsCount) nextX = 0;
+            if (nextX < 0) nextX = columnsCount - 1;
+            if (nextY >= rowsCount) nextY = 0;
+            if (nextY < 0) nextY = rowsCount - 1;
+
+            // Self Cannibalization Collision Handling Vector Check
+            for(let i = 0; i < snakeArray.length; i++) {
+                if(snakeArray[i].x === nextX && snakeArray[i].y === nextY) {
+                    appendLog('[KINETIC] Self-collision grid registration triggered. Resetting matrix.');
+                    initializeSnakeGame();
+                    return;
+                }
+            }
+
+            const freshHeadNode = {x: nextX, y: nextY};
+            snakeArray.unshift(freshHeadNode);
+
+            // Assimilation Evaluation Array matching fruit coordinates
+            if (nextX === fruitNode.x && nextY === fruitNode.y) {
+                accumulatedScore++;
+                scoreElement.innerText = accumulatedScore;
+                appendLog(`[KINETIC] Target fruit eaten. Total score: ${accumulatedScore}`);
+                generateRandomFruitLocation();
+            } else {
+                snakeArray.pop();
+            }
+
+            renderSnakeGraphicsFrame();
+        }
+
+        function renderSnakeGraphicsFrame() {
+            // Clear Frame Viewport
+            const isLightTheme = document.body.classList.contains('light-theme') || document.body.classList.contains('light-mode');
+            ctx.fillStyle = isLightTheme ? '#FFFFFF' : '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Render Solid Square Fruit Object - Dark Red Strategy (#8B0000)
+            ctx.fillStyle = '#8B0000';
+            ctx.fillRect(fruitNode.x * gridBlockSize, fruitNode.y * gridBlockSize, gridBlockSize, gridBlockSize);
+
+            // Render Multi-segment Angular Block Snake Structural Engine Line
+            ctx.fillStyle = isLightTheme ? '#000000' : '#FFFFFF';
+            for(let i = 0; i < snakeArray.length; i++) {
+                ctx.fillRect(snakeArray[i].x * gridBlockSize, snakeArray[i].y * gridBlockSize, gridBlockSize - 1, gridBlockSize - 1);
+            }
+        }
+
+        // CONTROLS INTERFACE INTERPOLATOR: DESKTOP KEYBOARD BINDINGS
+        window.addEventListener('keydown', (e) => {
+            const code = e.key.toLowerCase();
+            if (code === 'w' && movementDY !== 1)  { movementDX = 0;  movementDY = -1; }
+            if (code === 's' && movementDY !== -1) { movementDX = 0;  movementDY = 1;  }
+            if (code === 'a' && movementDX !== 1)  { movementDX = -1; movementDY = 0;  }
+            if (code === 'd' && movementDX !== -1) { movementDX = 1;  movementDY = 0;  }
+        });
+
+        // CONTROLS INTERFACE INTERPOLATOR: MOBILE COAXIAL TOUCH SWIPE DIRECTION CALCULATOR
+        let startTouchCoordinateX = 0;
+        let startTouchCoordinateY = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            startTouchCoordinateX = e.touches[0].clientX;
+            startTouchCoordinateY = e.touches[0].clientY;
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', (e) => {
+            if (!startTouchCoordinateX || !startTouchCoordinateY) return;
+
+            let terminalTouchCoordinateX = e.changedTouches[0].clientX;
+            let terminalTouchCoordinateY = e.changedTouches[0].clientY;
+
+            let deltaX = terminalTouchCoordinateX - startTouchCoordinateX;
+            let deltaY = terminalTouchCoordinateY - startTouchCoordinateY;
+
+            // Select higher amplitude movement axis vector path to map velocity line orientation
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > 30 && movementDX !== -1) { movementDX = 1; movementDY = 0; }
+                else if (deltaX < -30 && movementDX !== 1) { movementDX = -1; movementDY = 0; }
+            } else {
+                if (deltaY > 30 && movementDY !== -1) { movementDX = 0; movementDY = 1; }
+                else if (deltaY < -30 && movementDY !== 1) { movementDX = 0; movementDY = -1; }
+            }
+
+            startTouchCoordinateX = 0;
+            startTouchCoordinateY = 0;
+        }, { passive: true });
+
+        // DYNAMIC RESIZE DEBOUNCE WATCHER
+        window.addEventListener('resize', () => {
+            resizeSnakeCanvas();
+            renderSnakeGraphicsFrame();
+        });
+
+        // RUNTIME DOM ATTACH COUPLING INTERPRETER SEQUENCE
+        window.addEventListener('DOMContentLoaded', () => {
+            initMapSystem();
+            initializeSnakeGame();
+            fetchWeatherTelemetryMatrix();
+        });
+    </script>
+</body>
+</html>
