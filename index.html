@@ -9,8 +9,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <style>
-
-/* IRONCLAD 90-DEGREE ZERO-CURVE SCROLLBAR OVERRIDE */
+        /* IRONCLAD 90-DEGREE ZERO-CURVE SCROLLBAR OVERRIDE */
         ::-webkit-scrollbar {
             width: 8px !important;       /* Hard lock vertical size */
             height: 8px !important;      /* Hard lock horizontal size */
@@ -39,7 +38,6 @@
             scrollbar-color: var(--border) var(--bg) !important;
             border-radius: 0 !important; /* Re-verify entire DOM has zero curves */
         }
-
 
         /* BASE MATRIX SETTING - BRUTALIST SANS-SERIF OVERRIDE */
         :root {
@@ -160,28 +158,28 @@
             color: var(--bg);
         }
 
-        /* CUSTOM BRUTALIST DROPDOWN LAYOUT STRUCTURE */
-        .custom-select-container {
+        /* CUSTOM LOCATION SELECTOR FRAMEWORK OVERRIDES */
+        .custom-dropdown-container {
             position: relative;
             display: inline-block;
         }
 
-        .location-drop-menu {
+        .location-menu-dropdown {
             display: none;
             position: absolute;
             top: calc(100% + 2px);
-            left: 0;
+            right: 0;
             background-color: var(--bg);
             border: 2px solid var(--border);
-            min-width: 100%;
-            z-index: 1005;
+            width: 140px;
+            z-index: 1002;
         }
 
-        .location-drop-menu.active {
+        .location-menu-dropdown.active {
             display: block;
         }
 
-        .location-option {
+        .location-menu-item {
             padding: 8px 16px;
             font-size: clamp(9px, 0.6vw + 8px, 13px);
             font-weight: 900;
@@ -189,86 +187,75 @@
             background-color: var(--bg);
             color: var(--text);
             border-bottom: 2px solid var(--border-sub);
-            white-space: nowrap;
+            text-align: left;
         }
 
-        .location-option:last-child {
+        .location-menu-item:last-child {
             border-bottom: none;
         }
 
-        /* Absolute color inversion on hover to block out browser select overrides */
-        .location-option:hover {
+        /* FIXED: Dynamic inversion matrix for high-contrast theme adaptive hover states */
+        .location-menu-item:hover {
             background-color: var(--text) !important;
             color: var(--bg) !important;
         }
 
-@media (max-width: 768px) {
-    header {
-        padding: 10px 12px;
-        flex-wrap: nowrap !important; /* Strictly forbid wrapping into rows */
-        justify-content: space-between;
-        overflow: visible; /* FIXED: Changed from hidden to visible to show drop-menu dropdown elements */
-    }
+        @media (max-width: 768px) {
+            header {
+                padding: 10px 12px;
+                flex-wrap: nowrap !important; /* Strictly forbid wrapping into rows */
+                justify-content: space-between;
+                overflow: visible; /* FIXED: Changed from hidden to visible to show drop-menu dropdown elements */
+            }
 
-    .brand-token {
-        font-size: 15px;
-        flex-shrink: 0; /* Keep the logo from shrinking */
-    }
+            .brand-token {
+                font-size: 15px;
+                flex-shrink: 0; /* Keep the logo from shrinking */
+            }
 
-    .nav-controls {
-        display: flex;
-        flex-wrap: nowrap !important; /* Force items strictly inline */
-        gap: 6px;
-        justify-content: flex-end;
-        min-width: 0; /* Enable internal shrinking mechanics */
-        flex-grow: 1;
-    }
+            .nav-controls {
+                display: flex;
+                flex-wrap: nowrap !important; /* Force items strictly inline */
+                gap: 6px;
+                justify-content: flex-end;
+                min-width: 0; /* Enable internal shrinking mechanics */
+                flex-grow: 1;
+            }
 
-    button, select {
-        padding: 6px 8px;
-        font-size: 10px;
-        letter-spacing: 0.02em;
-        flex-shrink: 0; /* FIXED: Prevents interactive elements from completely collapsing to 0 width */
-    }
+            button, select {
+                padding: 6px 8px;
+                font-size: 10px;
+                letter-spacing: 0.02em;
+                flex-shrink: 0; /* FIXED: Prevents interactive elements from completely collapsing to 0 width */
+            }
 
-    .location-option {
-        padding: 6px 8px;
-        font-size: 10px;
-        letter-spacing: 0.02em;
-    }
+            button {
+                /* Smooth Brutalist Text Truncation restricted strictly to buttons to preserve native select configurations */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis; 
+            }
 
-    button {
-        /* Smooth Brutalist Text Truncation restricted strictly to buttons to preserve native select configurations */
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis; 
-    }
+            .drop-menu {
+                width: 280px; /* FIXED: Scaled down slightly to guarantee screen real-estate alignment */
+                max-width: calc(100vw - 24px); /* FIXED: Ironclad bounds restriction layout logic to prevent horizontal overflow */
+            }
+        }
 
-    .drop-menu {
-        width: 280px; /* FIXED: Scaled down slightly to guarantee screen real-estate alignment */
-        max-width: calc(100vw - 24px); /* FIXED: Ironclad bounds restriction layout logic to prevent horizontal overflow */
-    }
-}
+        @media (max-width: 480px) {
+            header {
+                padding: 8px 8px;
+            }
+            
+            .brand-token {
+                font-size: 13px;
+            }
 
-@media (max-width: 480px) {
-    header {
-        padding: 8px 8px;
-    }
-    
-    .brand-token {
-        font-size: 13px;
-    }
-
-    button, select {
-        padding: 6px 4px;
-        font-size: 9px;
-    }
-
-    .location-option {
-        padding: 6px 4px;
-        font-size: 9px;
-    }
-}
+            button, select {
+                padding: 6px 4px;
+                font-size: 9px;
+            }
+        }
 
         /* CUSTOM NAVIGATION DROP-MENU */
         .drop-menu {
@@ -500,6 +487,31 @@
             animation: blink 1s steps(2, start) infinite;
         }
         @keyframes blink { to { visibility: hidden; } }
+
+        /* BRUTALIST IMAGE ROW OVERRIDE SYSTEM */
+        .asset-gallery-container {
+            width: 100vw;
+            background-color: var(--bg);
+            border-bottom: 2px solid var(--border);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .asset-gallery-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1%;
+            width: 100%;
+        }
+        .asset-gallery-row img {
+            width: 15.5%;
+            height: auto;
+            display: block;
+            border: none !important; /* Total removal of visual image borders */
+            outline: none !important;
+        }
     </style>
 </head>
 <body>
@@ -507,14 +519,13 @@
     <header>
         <div class="brand-token">\\\ LUVIASUN</div>
         <div class="nav-controls">
-            <div class="custom-select-container">
-                <button id="location-trigger-btn" onclick="toggleLocationMenu(event)">PUNE ▾</button>
-                <div class="location-drop-menu" id="location-custom-menu">
-                    <div class="location-option" onclick="pickLocation('pune', 'PUNE ▾')">PUNE</div>
-                    <div class="location-option" onclick="pickLocation('france', 'PARIS ▾')">PARIS</div>
+            <div class="custom-dropdown-container">
+                <button id="location-selector-btn" onclick="toggleLocationMenu()">PUNE</button>
+                <div class="location-menu-dropdown" id="location-custom-menu">
+                    <div class="location-menu-item" onclick="selectLocationContext('pune', 'PUNE')">PUNE</div>
+                    <div class="location-menu-item" onclick="selectLocationContext('france', 'PARIS')">PARIS</div>
                 </div>
             </div>
-            
             <button id="theme-toggle" onclick="toggleTheme()">DARK</button>
             <button onclick="toggleMenu()">INDEX</button>
             <div class="drop-menu" id="nav-menu">
@@ -534,9 +545,28 @@
     <section id="screen1" class="viewport-section">
         <h1 class="hero-title">LUVIASUN</h1>
         <p style="letter-spacing: 0.2em; font-size: 12px;">
-            <span class="pulse-dot"></span>SYSTEM CONFIGURATION: LIVE TELEMETRY LOGIC TERMINAL // ACTIVE LAYER INTERFACE
+            <span class="pulse-dot"></span>Luviasun is a brutalist, air-gapped utility hub featuring real-time local weather graphics, an interactive map with manual coordinate overrides, a 365-day calendar grid, and an offline arcade subroutine.
         </p>
     </section>
+
+    <div class="asset-gallery-container">
+        <div class="asset-gallery-row">
+            <img src="https://github.com/user-attachments/assets/7bf0759a-c30a-4fec-910c-6d6fa9a99cdd" alt="Weather Light" />
+            <img src="https://github.com/user-attachments/assets/48019219-5bde-48ec-876f-32d8e8281f93" alt="Data Light" />
+            <img src="https://github.com/user-attachments/assets/571baf5d-2fe8-4849-9967-5bb5987187e3" alt="Map Light" />
+            <img src="https://github.com/user-attachments/assets/c72aefa3-f30f-4e40-89f9-dd7c56dbe354" alt="Calendar Light" />
+            <img src="https://github.com/user-attachments/assets/8eddf782-10d0-4a16-8dab-32b1e52d2e2d" alt="Snake Light" />
+            <img src="https://github.com/user-attachments/assets/4dd1d79c-a9e3-4ca4-9d4b-d244b289069f" alt="Settings Light" />
+        </div>
+        <div class="asset-gallery-row">
+            <img src="https://github.com/user-attachments/assets/776ece48-2009-426b-ba34-4843ccd929a0" alt="Weather Dark" />
+            <img src="https://github.com/user-attachments/assets/a4778454-ab85-499d-9561-bb2b83a7066f" alt="Data Dark" />
+            <img src="https://github.com/user-attachments/assets/8b3b8e62-6777-48a2-a043-272117fa8ec7" alt="Map Dark" />
+            <img src="https://github.com/user-attachments/assets/54c2a9f5-3b36-4156-97a5-621b5538f337" alt="Calendar Dark" />
+            <img src="https://github.com/user-attachments/assets/59bfd058-8e4a-40ce-aab1-9c1660a5f4bb" alt="Snake Dark" />
+            <img src="https://github.com/user-attachments/assets/7f838467-e898-4545-9768-ee27b34e255e" alt="Settings Dark" />
+        </div>
+    </div>
 
     <section id="screen2" class="viewport-section">
         <div class="section-header">
@@ -547,6 +577,11 @@
             <div class="log-entry">[SYSTEM] Swapping typography metrics to raw high-contrast Sans-Serif architecture layout.</div>
             <div class="log-entry">[SYSTEM] Brand identity initialized: logo assignment '\\\' parsed successfully.</div>
             <div class="log-entry">[DATA] Geolocation nodes parsed: Pune, IN Core (18.5204° N, 73.8567° E) | Paris, FR Core (Eiffel Tower Pin: 48.8584° N, 2.2945° E).</div>
+            <div class="log-entry">[NODE_PUNE] Coordinates: 18.5204° N, 73.8567° E | Elevation: 560m MSL | Datacenter ID: MH-PN-01</div>
+            <div class="log-entry">[NODE_PUNE] Regional Climatology Class: Koppen-Geiger (Aw) Tropical Wet and Dry | Array Active</div>
+            <div class="log-entry">[NODE_PARIS] Coordinates: 48.8584° N, 2.2945° E | Elevation: 35m MSL | Datacenter ID: FR-IDF-02</div>
+            <div class="log-entry">[NODE_PARIS] Regional Climatology Class: Koppen-Geiger (Cfb) Oceanic / Warm-summer Maritime</div>
+            <div class="log-entry">[HARDWARE] Air-gapped socket buffer sizing verified. Constructing dynamic asynchronous thread mappings...</div>
         </div>
     </section>
 
@@ -801,29 +836,26 @@
         }
 
         function toggleMenu() {
+            document.getElementById('location-custom-menu').classList.remove('active');
             document.getElementById('nav-menu').classList.toggle('active');
-            // Dismiss location menu when index navigation opens
-            document.getElementById('location-custom-menu').classList.remove('active');
         }
 
-        /* CUSTOM LOCATION MENU DISPATCH INTERFACES */
-        function toggleLocationMenu(e) {
-            if (e) e.stopPropagation();
-            document.getElementById('location-custom-menu').classList.toggle('active');
+        function toggleLocationMenu() {
             document.getElementById('nav-menu').classList.remove('active');
+            document.getElementById('location-custom-menu').classList.toggle('active');
         }
 
-        function pickLocation(value, label) {
-            document.getElementById('location-trigger-btn').innerText = label;
-            switchLocationContext(value);
+        function selectLocationContext(value, label) {
+            document.getElementById('location-selector-btn').innerText = label;
             document.getElementById('location-custom-menu').classList.remove('active');
+            switchLocationContext(value);
         }
 
-        // Global DOM framework ambient click catcher to shut down drop context elements
+        // Close dropdowns if the user clicks out into the system canvas
         window.addEventListener('click', function(e) {
-            const container = document.querySelector('.custom-select-container');
-            if (container && !container.contains(e.target)) {
+            if (!e.target.matches('button') && !e.target.matches('.location-menu-item')) {
                 document.getElementById('location-custom-menu').classList.remove('active');
+                document.getElementById('nav-menu').classList.remove('active');
             }
         });
 
