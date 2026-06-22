@@ -194,7 +194,7 @@
             border-bottom: none;
         }
 
-        /* FIXED: Dynamic inversion matrix for high-contrast theme adaptive hover states */
+        /* Dynamic inversion matrix for high-contrast theme adaptive hover states */
         .location-menu-item:hover {
             background-color: var(--text) !important;
             color: var(--bg) !important;
@@ -205,7 +205,7 @@
                 padding: 10px 12px;
                 flex-wrap: nowrap !important; /* Strictly forbid wrapping into rows */
                 justify-content: space-between;
-                overflow: visible; /* FIXED: Changed from hidden to visible to show drop-menu dropdown elements */
+                overflow: visible; /* Changed from hidden to visible to show drop-menu dropdown elements */
             }
 
             .brand-token {
@@ -226,7 +226,7 @@
                 padding: 6px 8px;
                 font-size: 10px;
                 letter-spacing: 0.02em;
-                flex-shrink: 0; /* FIXED: Prevents interactive elements from completely collapsing to 0 width */
+                flex-shrink: 0; /* Prevents interactive elements from completely collapsing to 0 width */
             }
 
             button {
@@ -237,8 +237,8 @@
             }
 
             .drop-menu {
-                width: 280px; /* FIXED: Scaled down slightly to guarantee screen real-estate alignment */
-                max-width: calc(100vw - 24px); /* FIXED: Ironclad bounds restriction layout logic to prevent horizontal overflow */
+                width: 280px; /* Scaled down slightly to guarantee screen real-estate alignment */
+                max-width: calc(100vw - 24px); /* Ironclad bounds restriction layout logic to prevent horizontal overflow */
             }
         }
 
@@ -424,8 +424,6 @@
             resize: none;
             white-space: pre;
             overflow: auto;
-            
-            /* ABSOLUTE FIX FOR FOCUS BORDER GLITCH */
             outline: none;
         }
 
@@ -478,16 +476,6 @@
             text-decoration: underline;
         }
 
-        .pulse-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: #8B0000;
-            margin-right: 8px;
-            animation: blink 1s steps(2, start) infinite;
-        }
-        @keyframes blink { to { visibility: hidden; } }
-
         /* BRUTALIST IMAGE ROW OVERRIDE SYSTEM */
         .asset-gallery-container {
             width: 100vw;
@@ -511,6 +499,42 @@
             display: block;
             border: none !important; /* Total removal of visual image borders */
             outline: none !important;
+        }
+
+        /* RETRO TERMINAL INTERSECTING MESH GRID OVERLAY (BOX PATTERN) */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            /* Combines horizontal and vertical lines to build structured 6px microscopic grid boxes */
+            background: 
+                linear-gradient(rgba(0, 0, 0, 0.18) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.18) 1px, transparent 1px);
+            background-size: 6px 6px;
+            z-index: 99999; /* Keeps it on top of all layers */
+            pointer-events: none; /* Allows clicking through the overlay */
+        }
+
+        /* Light mode correction to keep box grid lines perfectly balanced and subtle */
+        html.light-mode body::after {
+            background: 
+                linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+            background-size: 6px 6px;
+        }
+
+        /* STEP-BASED INSTANT CURSOR BLINK */
+        .hero-title::after {
+            content: " █"; /* Using a brutalist solid block character */
+            animation: cursor-blink 1s steps(2, start) infinite;
+        }
+
+        @keyframes cursor-blink {
+            to { visibility: hidden; }
         }
     </style>
 </head>
@@ -545,7 +569,7 @@
     <section id="screen1" class="viewport-section">
         <h1 class="hero-title">LUVIASUN</h1>
         <p style="letter-spacing: 0.2em; font-size: 12px;">
-            <span class="pulse-dot"></span>Luviasun is a brutalist, air-gapped utility hub featuring real-time local weather graphics, an interactive map with manual coordinate overrides, a 365-day calendar grid, and an offline arcade subroutine.
+            BRUTALIST MULTI-NODE WEATHER DASHBOARD // MAPPING // RETRO GAMING // SCHEDULING CALENDARS
         </p>
     </section>
 
@@ -808,7 +832,6 @@
     </footer>
 
     <script>
-        // GEOGRAPHIC COORD CONSTANTS MAP - Paris optimized to center the Eiffel Tower
         const NODES = {
             pune: { lat: 18.5204, lon: 73.8567, label: "PUNE, INDIA CORE" },
             france: { lat: 48.8584, lon: 2.2945, label: "PARIS, FRANCE CORE (EIFFEL TOWER)" }
@@ -851,7 +874,6 @@
             switchLocationContext(value);
         }
 
-        // Close dropdowns if the user clicks out into the system canvas
         window.addEventListener('click', function(e) {
             if (!e.target.matches('button') && !e.target.matches('.location-menu-item')) {
                 document.getElementById('location-custom-menu').classList.remove('active');
@@ -953,8 +975,6 @@
                 const parisData = await parisRes.json();
                 
                 appendLog('[NETWORK] Whole raw multi-parameter API data blocks synchronized for both matrices.', 'log-success');
-                appendLog(`[PARIS WEATHER TELEMETRY LOG] TEMP: ${parisData.current.temperature_2m}°C | HUMIDITY: ${parisData.current.relative_humidity_2m}% | APPARENT: ${parisData.current.apparent_temperature}°C | RAIN: ${parisData.current.rain}mm | PRESSURE: ${parisData.current.surface_pressure}hPa | GUSTS: ${parisData.current.wind_gusts_10m}km/h`, 'log-success');
-
                 populateTelemetryInterface(puneData, parisData);
             } catch (error) {
                 appendLog(`[CRITICAL] Processing stream broken: ${error.message}`, 'log-error');
@@ -995,7 +1015,6 @@
         }
 
         function populateTelemetryInterface(puneData, parisData) {
-            // Textarea mapping multi-node data directly
             document.getElementById('json-textarea').value = JSON.stringify({ NODE_PUNE: puneData, NODE_PARIS: parisData }, null, 4);
 
             // Populate Pune Weather Array
@@ -1016,15 +1035,12 @@
             document.getElementById('paris-gusts').innerText = `${parisData.current.wind_gusts_10m} km/h`;
             document.getElementById('paris-uv').innerText = `${parisData.daily.uv_index_max[3] || 'N/A'}`;
 
-            // Historical Array Matrices Population
             populateTableRows('pune-hist-table', puneData, 0, 3, false);
             populateTableRows('paris-hist-table', parisData, 0, 3, false);
 
-            // Forecast Array Matrices Population
             populateTableRows('pune-forecast-table', puneData, 4, 7, true);
             populateTableRows('paris-forecast-table', parisData, 4, 7, true);
 
-            // Auxiliary Stratum Indices Population
             populateAuxIndices('pune', puneData);
             populateAuxIndices('paris', parisData);
 
@@ -1060,7 +1076,6 @@
         function initializeSnakeGame() {
             resizeSnakeCanvas();
             
-            // Safe fallback center points
             const startX = Math.floor(columnsCount / 2) || 10;
             const startY = Math.floor(rowsCount / 2) || 10;
             
@@ -1084,7 +1099,6 @@
             fruitNode.x = Math.floor(Math.random() * columnsCount);
             fruitNode.y = Math.floor(Math.random() * rowsCount);
             
-            // Prevent fruit from spawning inside snake logic structures
             for (let segment of snakeArray) {
                 if (segment.x === fruitNode.x && segment.y === fruitNode.y) {
                     generateRandomFruitLocation();
@@ -1096,17 +1110,14 @@
         function executeSnakeTickLoop() {
             if (columnsCount === 0 || rowsCount === 0) return;
 
-            // Compute projected head translation coordinate vectors
             let nextX = snakeArray[0].x + movementDX;
             let nextY = snakeArray[0].y + movementDY;
 
-            // INFINITE WALL RE-ENTRY FRAME MODULO LOGIC
             if (nextX >= columnsCount) nextX = 0;
             if (nextX < 0) nextX = columnsCount - 1;
             if (nextY >= rowsCount) nextY = 0;
             if (nextY < 0) nextY = rowsCount - 1;
 
-            // Self Cannibalization Collision Handling Vector Check
             for(let i = 0; i < snakeArray.length; i++) {
                 if(snakeArray[i].x === nextX && snakeArray[i].y === nextY) {
                     appendLog('[KINETIC] Self-collision grid registration triggered. Resetting matrix.');
@@ -1118,7 +1129,6 @@
             const freshHeadNode = {x: nextX, y: nextY};
             snakeArray.unshift(freshHeadNode);
 
-            // Assimilation Evaluation Array matching fruit coordinates
             if (nextX === fruitNode.x && nextY === fruitNode.y) {
                 accumulatedScore++;
                 scoreElement.innerText = accumulatedScore;
@@ -1132,23 +1142,19 @@
         }
 
         function renderSnakeGraphicsFrame() {
-            // Clear Frame Viewport
             const isLightTheme = document.body.classList.contains('light-theme') || document.body.classList.contains('light-mode');
             ctx.fillStyle = isLightTheme ? '#FFFFFF' : '#000000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Render Solid Square Fruit Object - Dark Red Strategy (#8B0000)
             ctx.fillStyle = '#8B0000';
             ctx.fillRect(fruitNode.x * gridBlockSize, fruitNode.y * gridBlockSize, gridBlockSize, gridBlockSize);
 
-            // Render Multi-segment Angular Block Snake Structural Engine Line
             ctx.fillStyle = isLightTheme ? '#000000' : '#FFFFFF';
             for(let i = 0; i < snakeArray.length; i++) {
                 ctx.fillRect(snakeArray[i].x * gridBlockSize, snakeArray[i].y * gridBlockSize, gridBlockSize - 1, gridBlockSize - 1);
             }
         }
 
-        // CONTROLS INTERFACE INTERPOLATOR: DESKTOP KEYBOARD BINDINGS
         window.addEventListener('keydown', (e) => {
             const code = e.key.toLowerCase();
             if (code === 'w' && movementDY !== 1)  { movementDX = 0;  movementDY = -1; }
@@ -1157,7 +1163,6 @@
             if (code === 'd' && movementDX !== -1) { movementDX = 1;  movementDY = 0;  }
         });
 
-        // CONTROLS INTERFACE INTERPOLATOR: MOBILE COAXIAL TOUCH SWIPE DIRECTION CALCULATOR
         let startTouchCoordinateX = 0;
         let startTouchCoordinateY = 0;
 
@@ -1175,7 +1180,6 @@
             let deltaX = terminalTouchCoordinateX - startTouchCoordinateX;
             let deltaY = terminalTouchCoordinateY - startTouchCoordinateY;
 
-            // Select higher amplitude movement axis vector path to map velocity line orientation
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
                 if (deltaX > 30 && movementDX !== -1) { movementDX = 1; movementDY = 0; }
                 else if (deltaX < -30 && movementDX !== 1) { movementDX = -1; movementDY = 0; }
@@ -1188,13 +1192,11 @@
             startTouchCoordinateY = 0;
         }, { passive: true });
 
-        // DYNAMIC RESIZE DEBOUNCE WATCHER
         window.addEventListener('resize', () => {
             resizeSnakeCanvas();
             renderSnakeGraphicsFrame();
         });
 
-        // RUNTIME DOM ATTACH COUPLING INTERPRETER SEQUENCE
         window.addEventListener('DOMContentLoaded', () => {
             initMapSystem();
             initializeSnakeGame();
