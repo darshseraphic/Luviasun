@@ -9,7 +9,7 @@ assets/.env
 assets/config/.env
 lib/config/api_keys.dart
 lib/secrets.dart
-
+pubspec.lock
 # -------------------------------------------------------------------------
 # FLUTTER / DART ENGINE CORE FILES
 # -------------------------------------------------------------------------
