@@ -1,5 +1,23 @@
 ### LUVIASUN TECHNICAL RUNTIME SPECIFICATION AND OPERATIONS MANIFEST
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/7bf0759a-c30a-4fec-910c-6d6fa9a99cdd" alt="Weather Light" width="16%" />
+  <img src="https://github.com/user-attachments/assets/48019219-5bde-48ec-876f-32d8e8281f93" alt="Data Light" width="16%" />
+  <img src="https://github.com/user-attachments/assets/571baf5d-2fe8-4849-9967-5bb5987187e3" alt="Map Light" width="16%" />
+  <img src="https://github.com/user-attachments/assets/c72aefa3-f30f-4e40-89f9-dd7c56dbe354" alt="Calendar Light" width="16%" />
+  <img src="https://github.com/user-attachments/assets/8eddf782-10d0-4a16-8dab-32b1e52d2e2d" alt="Snake Light" width="16%" />
+  <img src="https://github.com/user-attachments/assets/4dd1d79c-a9e3-4ca4-9d4b-d244b289069f" alt="Settings Light" width="16%" />
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/776ece48-2009-426b-ba34-4843ccd929a0" alt="Weather Dark" width="16%" />
+  <img src="https://github.com/user-attachments/assets/a4778454-ab85-499d-9561-bb2b83a7066f" alt="Data Dark" width="16%" />
+  <img src="https://github.com/user-attachments/assets/8b3b8e62-6777-48a2-a043-272117fa8ec7" alt="Map Dark" width="16%" />
+  <img src="https://github.com/user-attachments/assets/54c2a9f5-3b36-4156-97a5-621b5538f337" alt="Calendar Dark" width="16%" />
+  <img src="https://github.com/user-attachments/assets/59bfd058-8e4a-40ce-aab1-9c1660a5f4bb" alt="Snake Dark" width="16%" />
+  <img src="https://github.com/user-attachments/assets/7f838467-e898-4545-9768-ee27b34e255e" alt="Settings Dark" width="16%" />
+</p>
+
 ### SECTION 1: ARCHITECTURAL PRINCIPLES AND DESIGN PHILOSOPHY
 
 ### 1.1 The Brutalist-Minimalist Axiom
