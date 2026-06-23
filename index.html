@@ -255,6 +255,9 @@
                 padding: 6px 4px;
                 font-size: 9px;
             }
+            body::after {
+                background-size: 2px 2px !important; /* Drops box sizes from 6px to 4px */
+            }
         }
 
         /* CUSTOM NAVIGATION DROP-MENU */
@@ -353,6 +356,7 @@
         }
 
         /* SCREEN SPECIFIC LAYOUT CONSTRAINTS */
+        /* SCREEN SPECIFIC LAYOUT CONSTRAINTS */
         #screen1 {
             justify-content: center;
             align-items: center;
@@ -365,16 +369,16 @@
             letter-spacing: -0.05em;
             margin-bottom: 20px;
         }
-
-        .log-terminal {
-            background-color: var(--bg);
-            border: 2px solid var(--border);
-            padding: 16px;
-            flex-grow: 1;
-            font-size: 11px;
-            overflow-y: auto;
-            max-height: 70vh;
+        
+        /* NEW: DYNAMIC BRUTALIST TAGLINE ADJUSTMENT */
+        .hero-tagline {
+            letter-spacing: 0.18em;
+            font-size: clamp(9px, 2.5vw, 13px); /* Smoothly scales down to 9px on mobile, caps at 13px */
+            line-height: 1.6;
+            max-width: 85%;                    /* Keeps text blocks cleanly centered without clipping boundaries */
+            margin: 0 auto;
         }
+
         .log-entry {
             margin-bottom: 6px;
             white-space: pre-wrap;
@@ -568,7 +572,7 @@
 
     <section id="screen1" class="viewport-section">
         <h1 class="hero-title">LUVIASUN</h1>
-        <p style="letter-spacing: 0.2em; font-size: 12px;">
+        <p class="hero-tagline">
             BRUTALIST MULTI-NODE WEATHER DASHBOARD // MAPPING // RETRO GAMING // SCHEDULING CALENDARS
         </p>
     </section>
@@ -1197,10 +1201,51 @@
             renderSnakeGraphicsFrame();
         });
 
+        // --- ADDED DYNAMIC VIEW SUBTITLE SUBSYSTEM ---
+        function initDynamicSubtitleSystem() {
+            const subtitleMap = {
+                'screen1': 'BRUTALIST MULTI-NODE WEATHER DASHBOARD // MAPPING // RETRO GAMING // SCHEDULING CALENDARS',
+                'screen2': 'SYSTEM INITIALIZATION LOG // CORE ENGINE RUNTIME ENVIRONMENT',
+                'screen3': 'INTERACTIVE MAP PROFILE // GEOLOCATION NODES LOCKED',
+                'screen-snake': 'KINETIC TRAINING VECTOR // RETRO SNAKE SIMULATION INTERFACE',
+                'screen4': 'REAL-TIME WEATHER ARRAY // METRIC ATMOSPHERIC TELEMETRY MATRIX',
+                'screen5': 'HISTORICAL 3 DAY CLIMATOLOGY MATRIX // NODE CLUSTER ARCHIVES',
+                'screen6': 'PREDICTIVE 3 DAY WEATHER VECTOR // FORECAST PROBABILITY STRATUM',
+                'screen7': 'AUXILIARY ATMOSPHERIC INDICES // BOUNDARY LAYER INDEX ANALYSIS',
+                'screen8': 'RAW API PAYLOAD CORE STREAM // REAL-TIME SYNCHRONIZED LOG DATA'
+            };
+
+            const subtitleElement = document.getElementById('dynamic-subtitle');
+            if (!subtitleElement) return;
+
+            // Root margin sets target focus line directly at the midsection of the viewport windows
+            const observerOptions = {
+                root: null,
+                rootMargin: '-45% 0px -45% 0px',
+                threshold: 0
+            };
+
+            const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        if (subtitleMap[id]) {
+                            subtitleElement.innerText = subtitleMap[id];
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.viewport-section').forEach(section => {
+                sectionObserver.observe(section);
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             initMapSystem();
             initializeSnakeGame();
             fetchWeatherTelemetryMatrix();
+            initDynamicSubtitleSystem(); // INITIALIZE SUBTITLE MONITORING SYSTEM
         });
     </script>
 </body>
