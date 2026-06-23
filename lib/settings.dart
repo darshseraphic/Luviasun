@@ -269,86 +269,95 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
               const SizedBox(height: 16),
 
-              // [02] TELEMETRY COORDINATE OVERRIDE PANEL (Positioned dynamically below Theme and above User Guide)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: theme.ruleBorder, width: 0.8),
-                  color: Colors.transparent,
+              // [02] TELEMETRY COORDINATE OVERRIDE PANEL
+              Theme(
+                data: Theme.of(context).copyWith(
+                  textSelectionTheme: TextSelectionThemeData(
+                    cursorColor: theme.textMain,
+                    selectionColor: theme.textMain.withOpacity(0.25),
+                    selectionHandleColor: theme.textMain, // FIXED: Controls selection handle pin color
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'MAP DEFAULT LOCATION',
-                      style: TextStyle(color: theme.textMain, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2.0),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _latController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.bold),
-                            cursorColor: theme.textMain,
-                            decoration: InputDecoration(
-                              labelText: 'LATITUDE',
-                              labelStyle: TextStyle(color: theme.textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.ruleBorder, width: 0.8), borderRadius: BorderRadius.zero),
-                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.textMain, width: 1.0), borderRadius: BorderRadius.zero),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _lngController,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.bold),
-                            cursorColor: theme.textMain,
-                            decoration: InputDecoration(
-                              labelText: 'LONGITUDE',
-                              labelStyle: TextStyle(color: theme.textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.ruleBorder, width: 0.8), borderRadius: BorderRadius.zero),
-                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.textMain, width: 1.0), borderRadius: BorderRadius.zero),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () {
-                        final double? lat = double.tryParse(_latController.text);
-                        final double? lng = double.tryParse(_lngController.text);
-                        if (lat != null && lng != null) {
-                          // Updates Riverpod State Matrix globally
-                          ref.read(coordinateProvider.notifier).state = LatLng(lat, lng);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: theme.textMain,
-                              duration: const Duration(seconds: 2),
-                              content: Text('TARGET ENGAGED: [$lat, $lng]', style: TextStyle(color: theme.canvasBg, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-                            ),
-                          );
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        color: theme.textMain,
-                        alignment: Alignment.center,
-                        child: Text(
-                          'SUBMIT TARGET TELEMETRY',
-                          style: TextStyle(color: theme.canvasBg, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-                        ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: theme.ruleBorder, width: 0.8),
+                    color: Colors.transparent,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GEO-WEATHER MAPPING',
+                        style: TextStyle(color: theme.textMain, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 2.0),
                       ),
-                    )
-                  ],
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _latController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.bold),
+                              cursorColor: theme.textMain,
+                              decoration: InputDecoration(
+                                labelText: 'LATITUDE',
+                                labelStyle: TextStyle(color: theme.textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.ruleBorder, width: 0.8), borderRadius: BorderRadius.zero),
+                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.textMain, width: 1.0), borderRadius: BorderRadius.zero),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextField(
+                              controller: _lngController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: TextStyle(color: theme.textMain, fontSize: 11, fontWeight: FontWeight.bold),
+                              cursorColor: theme.textMain,
+                              decoration: InputDecoration(
+                                labelText: 'LONGITUDE',
+                                labelStyle: TextStyle(color: theme.textSub, fontSize: 9, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.ruleBorder, width: 0.8), borderRadius: BorderRadius.zero),
+                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: theme.textMain, width: 1.0), borderRadius: BorderRadius.zero),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () {
+                          final double? lat = double.tryParse(_latController.text);
+                          final double? lng = double.tryParse(_lngController.text);
+                          if (lat != null && lng != null) {
+                            // Updates Riverpod State Matrix globally
+                            ref.read(coordinateProvider.notifier).state = LatLng(lat, lng);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: theme.textMain,
+                                duration: const Duration(seconds: 2),
+                                content: Text('TARGET ENGAGED: [$lat, $lng]', style: TextStyle(color: theme.canvasBg, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          color: theme.textMain,
+                          alignment: Alignment.center,
+                          child: Text(
+                            'SUBMIT TARGET TELEMETRY',
+                            style: TextStyle(color: theme.canvasBg, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1.5),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
               ),
 
