@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'main.dart';
 
 class MapUiTheme {
@@ -51,7 +50,9 @@ class _MapScreenState extends State<MapScreen> {
                   height: 48,
                   decoration: BoxDecoration(
                     color: theme.appBg,
-                    border: Border(bottom: BorderSide(color: theme.ruleBorder, width: 1.0)),
+                    border: Border(
+                        bottom:
+                            BorderSide(color: theme.ruleBorder, width: 1.0)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -79,17 +80,22 @@ class _MapScreenState extends State<MapScreen> {
                     child: Consumer(
                       builder: (context, mapRef, child) {
                         // Dynamically intercepts user manual coordinate targets from settings
-                        final activeCoordinates = mapRef.watch(coordinateProvider);
+                        final activeCoordinates =
+                            mapRef.watch(coordinateProvider);
 
                         return FlutterMap(
                           // Enforces a view refresh when coordinates alter state positions
-                          key: ValueKey('${activeCoordinates.latitude}_${activeCoordinates.longitude}'),
+                          key: ValueKey(
+                              '${activeCoordinates.latitude}_${activeCoordinates.longitude}'),
                           options: MapOptions(
-                            initialCenter: activeCoordinates, // Hooks dynamic state coordinate matrix
-                            initialZoom: 12.0, // Focuses directly on the city core
+                            initialCenter:
+                                activeCoordinates, // Hooks dynamic state coordinate matrix
+                            initialZoom:
+                                12.0, // Focuses directly on the city core
                             maxZoom: 18.0,
                             minZoom: 3.2,
-                            cameraConstraint: const CameraConstraint.containLatitude(), // Locks vertical boundary leakages
+                            cameraConstraint: const CameraConstraint
+                                .containLatitude(), // Locks vertical boundary leakages
                           ),
                           children: [
                             TileLayer(
