@@ -242,21 +242,41 @@
             }
         }
 
-        @media (max-width: 480px) {
-            header {
-                padding: 8px 8px;
-            }
-            
-            .brand-token {
-                font-size: 13px;
+@media (max-width: 768px) {
+            /* ... Keep your existing header, brand-token, and button styles here ... */
+
+            /* 1. COMPACT LAYOUT GRID CONTRACTION */
+            .weather-grid {
+                grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+                gap: 12px !important; /* Drops space from 30px down to a dense 12px */
             }
 
-            button, select {
-                padding: 6px 4px;
-                font-size: 9px;
+            /* 2. MINIATURIZED DATA MATRIX TABLES */
+            .data-matrix th, .data-matrix td {
+                padding: 6px 8px !important; /* Compresses internal cell spacing */
+                font-size: 10px !important;   /* Drops type size for compact view */
             }
-            body::after {
-                background-size: 2px 2px !important; /* Drops box sizes from 6px to 4px */
+            .data-matrix th {
+                font-size: 9px !important;
+            }
+
+            /* 3. SCALED DOWN TELEMETRY HEADER TEXT */
+            .large-telemetry {
+                font-size: 36px !important;   /* Prevents giant text from wrapping awkwardly */
+                margin-bottom: 8px !important;
+            }
+
+            /* 4. TIGHTEN OVERALL CONTAINER PADDING */
+            .viewport-section {
+                padding: 68px 12px 24px 12px !important; /* Frees up extra screen real estate */
+            }
+            .section-header {
+                margin-bottom: 14px !important;
+            }
+
+            /* 5. MICROSCOPIC SCANLINE/CRT MESH OVERLAY */
+            body::after, html.light-mode body::after {
+                background-size: 3px 3px !important; /* Compresses background grids from 6px down to 3px */
             }
         }
 
