@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:latlong2/latlong.dart'; // REQUIRED: Imports LatLng structure to parse the provider state
+import 'package:latlong2/latlong.dart';
 import 'main.dart';
 
 class WeatherUiTheme {
@@ -69,7 +69,7 @@ class BrutalistClearNightPainter extends CustomPainter {
     canvas.drawRect(rect, strokePaint);
 
     final halfRect =
-    Rect.fromLTWH(rect.left, rect.top, rect.width / 2, rect.height);
+        Rect.fromLTWH(rect.left, rect.top, rect.width / 2, rect.height);
     canvas.drawRect(halfRect, fillPaint);
   }
 
@@ -154,10 +154,10 @@ class BrutalistSnowyPainter extends CustomPainter {
     ];
 
     for (final c in centers) {
-      // Horizontal cross-arm
-      canvas.drawLine(Offset(c.dx - arm, c.dy), Offset(c.dx + arm, c.dy), paint);
-      // Vertical cross-arm
-      canvas.drawLine(Offset(c.dx, c.dy - arm), Offset(c.dx, c.dy + arm), paint);
+      canvas.drawLine(
+          Offset(c.dx - arm, c.dy), Offset(c.dx + arm, c.dy), paint);
+      canvas.drawLine(
+          Offset(c.dx, c.dy - arm), Offset(c.dx, c.dy + arm), paint);
     }
   }
 
@@ -172,8 +172,8 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
 
   BrutalistTelemetryChartPainter(
       {required this.temperatures,
-        required this.dayLabels,
-        required this.theme});
+      required this.dayLabels,
+      required this.theme});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -208,7 +208,7 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
     for (int i = 0; i < temperatures.length; i++) {
       final double x = paddingLeft + (i * stepX);
       final double normalizedY =
-      range > 0 ? (temperatures[i] - minTemp) / range : 0.5;
+          range > 0 ? (temperatures[i] - minTemp) / range : 0.5;
 
       final double barHeight = 20 + (normalizedY * (chartHeight - 60));
       final double y = chartHeight - barHeight;
@@ -219,7 +219,7 @@ class BrutalistTelemetryChartPainter extends CustomPainter {
 
       final double barWidth = 24.0;
       final rect =
-      Rect.fromLTRB(x - barWidth / 2, y, x + barWidth / 2, chartHeight);
+          Rect.fromLTRB(x - barWidth / 2, y, x + barWidth / 2, chartHeight);
       canvas.drawRect(rect, barPaint);
 
       final nodeText = TextPainter(
@@ -293,21 +293,18 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     }
   }
 
-  // --- LIFECYCLE MANAGEMENT LAYER ---
   Future<void> _loadCacheOrFetch() async {
     try {
       final box = await Hive.openBox('weather_cache');
-
-      // PERSISTENCE BLOCK: Fetch coordinates preserved from previous runtime sessions
       final double? savedLat = box.get('saved_latitude');
       final double? savedLng = box.get('saved_longitude');
 
       if (savedLat != null && savedLng != null) {
         final LatLng currentCoords = ref.read(coordinateProvider);
-        if (currentCoords.latitude != savedLat || currentCoords.longitude != savedLng) {
-          // Sync Riverpod with last active spatial state
-          ref.read(coordinateProvider.notifier).state = LatLng(savedLat, savedLng);
-          return; // State switch instantly alerts ref.listen, triggering lifecycle sequence smoothly
+        if (currentCoords.latitude != savedLat ||
+            currentCoords.longitude != savedLng) {
+          ref.read(coordinateProvider.notifier).state =
+              LatLng(savedLat, savedLng);
         }
       }
 
@@ -337,7 +334,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     }
   }
 
-  // --- CENTRAL DISPATCHER ENGINE ---
   Future<void> _fetchTelemetryData({bool forced = true}) async {
     if (_telemetryData != null) {
       setState(() {
@@ -356,8 +352,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
     try {
       final LatLng coords = ref.read(coordinateProvider);
-
-      // System endpoint updated to now actively demand live current weather codes
       final String url = 'https://api.open-meteo.com/v1/forecast?'
           'latitude=${coords.latitude}&longitude=${coords.longitude}'
           '&daily=sunrise,sunset,weather_code,temperature_2m_max,temperature_2m_min'
@@ -376,7 +370,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
         final box = await Hive.openBox('weather_cache');
         final String todayKey =
-        DateTime.now().toIso8601String().substring(0, 10);
+            DateTime.now().toIso8601String().substring(0, 10);
 
         final String dateCacheKey =
             'last_fetch_day_${coords.latitude}_${coords.longitude}';
@@ -385,8 +379,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
         await box.put(dateCacheKey, todayKey);
         await box.put(payloadCacheKey, responseBody);
-
-        // Explicitly backup current operational coordinates to prevent loss during system reboots
         await box.put('saved_latitude', coords.latitude);
         await box.put('saved_longitude', coords.longitude);
 
@@ -417,8 +409,6 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
   Widget build(BuildContext context) {
     final bool isDark = ref.watch(themeProvider);
     final theme = WeatherUiTheme(isDark);
-
-    // 3. LISTEN FOR GLOBAL TARGET MODIFICATIONS
     ref.listen<LatLng>(coordinateProvider, (previous, next) async {
       final box = await Hive.openBox('weather_cache');
       await box.put('saved_latitude', next.latitude);
@@ -478,28 +468,28 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             Expanded(
               child: _isLoading
                   ? Container(
-                color: theme.canvasBg,
-                child: const Center(
-                  child: Text(
-                    '',
-                    style: TextStyle(fontSize: 0),
-                  ),
-                ),
-              )
+                      color: theme.canvasBg,
+                      child: const Center(
+                        child: Text(
+                          '',
+                          style: TextStyle(fontSize: 0),
+                        ),
+                      ),
+                    )
                   : _errorMessage != null
-                  ? Container(
-                padding: const EdgeInsets.all(24),
-                alignment: Alignment.center,
-                child: Text(
-                  'FAULT DETECTED: $_errorMessage',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: theme.textMain,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900),
-                ),
-              )
-                  : _buildFullyScrollableWorkspace(theme),
+                      ? Container(
+                          padding: const EdgeInsets.all(24),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'FAULT DETECTED: $_errorMessage',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: theme.textMain,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900),
+                          ),
+                        )
+                      : _buildFullyScrollableWorkspace(theme),
             ),
           ],
         ),
@@ -516,7 +506,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
 
     final double currentTemp = (current['temperature_2m'] ?? 0.0).toDouble();
     final double apparentTemp =
-    (current['apparent_temperature'] ?? 0.0).toDouble();
+        (current['apparent_temperature'] ?? 0.0).toDouble();
     final int humidity = (current['relative_humidity_2m'] ?? 0).toInt();
     final double currentRain = (current['rain'] ?? 0.0).toDouble();
     final int isDay = (current['is_day'] ?? 1).toInt();
@@ -530,29 +520,35 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
     }
 
     final double visibility =
-    (hourly['visibility']?[hourIdx] ?? 0.0).toDouble();
+        (hourly['visibility']?[hourIdx] ?? 0.0).toDouble();
     final double cloudLow =
-    (hourly['cloud_cover_low']?[hourIdx] ?? 0.0).toDouble();
+        (hourly['cloud_cover_low']?[hourIdx] ?? 0.0).toDouble();
     final double cloudMid =
-    (hourly['cloud_cover_mid']?[hourIdx] ?? 0.0).toDouble();
+        (hourly['cloud_cover_mid']?[hourIdx] ?? 0.0).toDouble();
     final double cloudHigh =
-    (hourly['cloud_cover_high']?[hourIdx] ?? 0.0).toDouble();
+        (hourly['cloud_cover_high']?[hourIdx] ?? 0.0).toDouble();
     final double sunshineDuration =
-    (hourly['sunshine_duration']?[hourIdx] ?? 0.0).toDouble();
+        (hourly['sunshine_duration']?[hourIdx] ?? 0.0).toDouble();
     final double windSpeed =
-    (hourly['wind_speed_180m']?[hourIdx] ?? 0.0).toDouble();
+        (hourly['wind_speed_180m']?[hourIdx] ?? 0.0).toDouble();
     final int windDir = (hourly['wind_direction_180m']?[hourIdx] ?? 0).toInt();
-
-    // Core Correction: Pull live weather updates from the current instance object block
     final int weatherCode = (current['weather_code'] ?? 0).toInt();
 
     String status = 'CLEAR';
-    // Mapping Matrix: Capture freezing rain, freezing drizzle, snowfall, and shower blocks (WMO 56, 57, 66, 67, 71-77, 85, 86)
-    if (weatherCode == 71 || weatherCode == 73 || weatherCode == 75 || weatherCode == 77 || weatherCode == 85 || weatherCode == 86 || weatherCode == 56 || weatherCode == 57 || weatherCode == 66 || weatherCode == 67) {
+    if (weatherCode == 71 ||
+        weatherCode == 73 ||
+        weatherCode == 75 ||
+        weatherCode == 77 ||
+        weatherCode == 85 ||
+        weatherCode == 86 ||
+        weatherCode == 56 ||
+        weatherCode == 57 ||
+        weatherCode == 66 ||
+        weatherCode == 67) {
       status = 'SNOWY';
     } else if (weatherCode >= 51) {
       status = 'RAINY';
-    } else if (weatherCode == 3) { // Code 3 flags strict overcast conditions
+    } else if (weatherCode == 3) {
       status = 'CLOUDY';
     }
 
@@ -630,7 +626,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             child: Table(
               border: TableBorder(
                 horizontalInside:
-                BorderSide(color: theme.ruleBorder, width: 1.0),
+                    BorderSide(color: theme.ruleBorder, width: 1.0),
                 verticalInside: BorderSide(color: theme.ruleBorder, width: 1.0),
                 top: BorderSide(color: theme.ruleBorder, width: 1.0),
                 left: BorderSide(color: theme.ruleBorder, width: 1.0),
@@ -720,7 +716,7 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
             child: Table(
               border: TableBorder(
                 horizontalInside:
-                BorderSide(color: theme.ruleBorder, width: 1.0),
+                    BorderSide(color: theme.ruleBorder, width: 1.0),
                 verticalInside: BorderSide(color: theme.ruleBorder, width: 1.0),
                 top: BorderSide(color: theme.ruleBorder, width: 1.0),
                 left: BorderSide(color: theme.ruleBorder, width: 1.0),
@@ -769,64 +765,73 @@ class _WeatherScreenState extends ConsumerState<WeatherScreen> {
                   ],
                 ),
                 ...List.generate((daily['time'] as List? ?? []).length,
-                        (index) {
-                      final String date = daily['time'][index];
-                      final double max =
+                    (index) {
+                  final String date = daily['time'][index];
+                  final double max =
                       (daily['temperature_2m_max']?[index] ?? 0.0).toDouble();
-                      final double min =
+                  final double min =
                       (daily['temperature_2m_min']?[index] ?? 0.0).toDouble();
-                      final int code = (daily['weather_code']?[index] ?? 0).toInt();
+                  final int code = (daily['weather_code']?[index] ?? 0).toInt();
 
-                      String dayCondition = 'CLEAR';
-                      if (code == 71 || code == 73 || code == 75 || code == 77 || code == 85 || code == 86 || code == 56 || code == 57 || code == 66 || code == 67) {
-                        dayCondition = 'SNOWY';
-                      } else if (code >= 51) {
-                        dayCondition = 'RAINY';
-                      } else if (code == 3) {
-                        dayCondition = 'CLOUDY';
-                      }
+                  String dayCondition = 'CLEAR';
+                  if (code == 71 ||
+                      code == 73 ||
+                      code == 75 ||
+                      code == 77 ||
+                      code == 85 ||
+                      code == 86 ||
+                      code == 56 ||
+                      code == 57 ||
+                      code == 66 ||
+                      code == 67) {
+                    dayCondition = 'SNOWY';
+                  } else if (code >= 51) {
+                    dayCondition = 'RAINY';
+                  } else if (code == 3) {
+                    dayCondition = 'CLOUDY';
+                  }
 
-                      final String resolvedDayName = _convertToDayName(date);
+                  final String resolvedDayName = _convertToDayName(date);
 
-                      return TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              resolvedDayName,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: theme.textMain,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.5),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              dayCondition,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: theme.textMain,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              '${max.toStringAsFixed(0)}° / ${min.toStringAsFixed(0)}°C',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: theme.textMain,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w900),
-                            ),
-                          ),
-                        ],
-                      );
-                    }),
+                  return TableRow(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          resolvedDayName,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: theme.textMain,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          dayCondition,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: theme.textMain,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          '${max.toStringAsFixed(0)}° / ${min.toStringAsFixed(0)}°C',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: theme.textMain,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
