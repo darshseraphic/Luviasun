@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart'; // Essential release trigger
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'main.dart';
 
 class AnimatedSplashScreen extends ConsumerStatefulWidget {
@@ -9,7 +9,8 @@ class AnimatedSplashScreen extends ConsumerStatefulWidget {
   const AnimatedSplashScreen({super.key, required this.child});
 
   @override
-  ConsumerState<AnimatedSplashScreen> createState() => _AnimatedSplashScreenState();
+  ConsumerState<AnimatedSplashScreen> createState() =>
+      _AnimatedSplashScreenState();
 }
 
 class _AnimatedSplashScreenState extends ConsumerState<AnimatedSplashScreen>
@@ -64,7 +65,6 @@ class _AnimatedSplashScreenState extends ConsumerState<AnimatedSplashScreen>
       debugPrint("Error loading background data: $e");
     } finally {
       if (mounted) {
-        // Releases the native hardware splash block seamlessly right as we start drawing the UI
         FlutterNativeSplash.remove();
         setState(() {
           _isDataLoaded = true;
@@ -84,8 +84,6 @@ class _AnimatedSplashScreenState extends ConsumerState<AnimatedSplashScreen>
     if (_isAnimationDone && _isDataLoaded) {
       return widget.child;
     }
-
-    // Fixed to strict absolute black background to seamlessly match the hardware splash color definition
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       body: Center(
