@@ -1,0 +1,83 @@
+# -------------------------------------------------------------------------
+# API CORE & ENVIRONMENT SECURITY MASKS (CRITICAL PERIMETER DEPLOYMENT)
+# -------------------------------------------------------------------------
+# Do not let git snapshot environmental parameters containing API client tokens
+.env
+.env.*
+*.env
+assets/.env
+assets/config/.env
+lib/config/api_keys.dart
+lib/secrets.dart
+pubspec.lock
+# -------------------------------------------------------------------------
+# FLUTTER / DART ENGINE CORE FILES
+# -------------------------------------------------------------------------
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# -------------------------------------------------------------------------
+# SENSITIVE DATA PIPELINE LOCAL REGISTRIES (HIVE / DATABASE PERSISTENCE)
+# -------------------------------------------------------------------------
+# Exclude mock weather caches, local state documents, and binary data registries
+*.db
+*.hive
+*.lock
+.apps/
+
+# -------------------------------------------------------------------------
+# PLATFORM SPECIFIC COMPILATION ARTIFACTS
+# -------------------------------------------------------------------------
+# Android Matrix
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle
+/android/local.properties
+/android/key.properties
+/*.jks
+/*.keystore
+
+# iOS / macOS Matrix
+/ios/Flutter/.last_build_id
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+/ios/Pods/
+/macos/Flutter/Generated.xcconfig
+/macos/Flutter/flutter_export_environment.sh
+/macos/Pods/
+*.xcworkspace
+*.xcuserdata
+*.lock
+Pods/
+
+# Web Engine
+/web/stacktrace.js
+
+# -------------------------------------------------------------------------
+# IDE DESKTOP ENGINE SETTINGS & USER METRICS
+# -------------------------------------------------------------------------
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# -------------------------------------------------------------------------
+# MISCELLANEOUS DISK CACHES & LOG PORTS
+# -------------------------------------------------------------------------
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.history
