@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'main.dart';
 
-// --- 1. LOCAL THEME MATRIX SPECIFICATION ---
 class SnakeUiTheme {
   final bool isDark;
   late final Color canvasBg;
@@ -20,12 +19,10 @@ class SnakeUiTheme {
     textMain = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     textSub = isDark ? const Color(0xFF737373) : const Color(0xFF404040);
     ruleBorder = isDark ? const Color(0xFF1F1F1F) : const Color(0xFFE5E5E5);
-    // Updated to pure black and pure white
     panelBg = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
   }
 }
 
-// --- 2. ARCADE STATE ENUMS & PAINTER ---
 enum SnakeDirection { up, down, left, right }
 
 class SnakePainter extends CustomPainter {
@@ -53,10 +50,12 @@ class SnakePainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     for (int i = 0; i <= gridSizeX; i++) {
-      canvas.drawLine(Offset(i * cellSize, 0), Offset(i * cellSize, size.height), gridPaint);
+      canvas.drawLine(Offset(i * cellSize, 0),
+          Offset(i * cellSize, size.height), gridPaint);
     }
     for (int i = 0; i <= gridSizeY; i++) {
-      canvas.drawLine(Offset(0, i * cellSize), Offset(size.width, i * cellSize), gridPaint);
+      canvas.drawLine(
+          Offset(0, i * cellSize), Offset(size.width, i * cellSize), gridPaint);
     }
 
     final snakePaint = Paint()
@@ -65,7 +64,8 @@ class SnakePainter extends CustomPainter {
 
     for (final point in snake) {
       canvas.drawRect(
-        Rect.fromLTWH(point.x * cellSize, point.y * cellSize, cellSize, cellSize),
+        Rect.fromLTWH(
+            point.x * cellSize, point.y * cellSize, cellSize, cellSize),
         snakePaint,
       );
     }
@@ -76,7 +76,8 @@ class SnakePainter extends CustomPainter {
         ..style = PaintingStyle.fill;
 
       canvas.drawRect(
-        Rect.fromLTWH(fruit!.x * cellSize, fruit!.y * cellSize, cellSize, cellSize),
+        Rect.fromLTWH(
+            fruit!.x * cellSize, fruit!.y * cellSize, cellSize, cellSize),
         fruitPaint,
       );
     }
@@ -86,7 +87,6 @@ class SnakePainter extends CustomPainter {
   bool shouldRepaint(covariant SnakePainter oldDelegate) => true;
 }
 
-// --- 3. ENGINE CONTROLLER LOGIC ---
 class SnakeScreen extends ConsumerStatefulWidget {
   const SnakeScreen({super.key});
 
@@ -202,7 +202,10 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
         break;
     }
 
-    if (nextHead.x < 0 || nextHead.x >= _gridSizeX || nextHead.y < 0 || nextHead.y >= _gridSizeY) {
+    if (nextHead.x < 0 ||
+        nextHead.x >= _gridSizeX ||
+        nextHead.y < 0 ||
+        nextHead.y >= _gridSizeY) {
       _gameOver();
       return;
     }
@@ -225,10 +228,14 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
   }
 
   void _handleDirectionInput(SnakeDirection newDir) {
-    if ((_currentDirection == SnakeDirection.up && newDir == SnakeDirection.down) ||
-        (_currentDirection == SnakeDirection.down && newDir == SnakeDirection.up) ||
-        (_currentDirection == SnakeDirection.left && newDir == SnakeDirection.right) ||
-        (_currentDirection == SnakeDirection.right && newDir == SnakeDirection.left)) {
+    if ((_currentDirection == SnakeDirection.up &&
+            newDir == SnakeDirection.down) ||
+        (_currentDirection == SnakeDirection.down &&
+            newDir == SnakeDirection.up) ||
+        (_currentDirection == SnakeDirection.left &&
+            newDir == SnakeDirection.right) ||
+        (_currentDirection == SnakeDirection.right &&
+            newDir == SnakeDirection.left)) {
       return;
     }
     _nextDirection = newDir;
@@ -291,9 +298,7 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
                     letterSpacing: 2.0,
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -310,20 +315,26 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
                     ),
                     Text(
                       'BEST: ${_highScore.toString().padLeft(3, '0')}',
-                      style: TextStyle(color: theme.textSub, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.05),
+                      style: TextStyle(
+                          color: theme.textSub,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.05),
                     ),
                   ],
                 ),
-
                 Divider(color: theme.ruleBorder, height: 20, thickness: 0.8),
-
                 Expanded(
                   child: Center(
                     child: AspectRatio(
                       aspectRatio: _gridSizeX / _gridSizeY,
                       child: Container(
                         decoration: BoxDecoration(
-                          border: Border.all(color: _isGameOver ? theme.accentCrimson : theme.textMain, width: 1.2),
+                          border: Border.all(
+                              color: _isGameOver
+                                  ? theme.accentCrimson
+                                  : theme.textMain,
+                              width: 1.2),
                           color: theme.panelBg,
                         ),
                         child: CustomPaint(
@@ -339,7 +350,6 @@ class _SnakeScreenState extends ConsumerState<SnakeScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 GestureDetector(
                   onTap: buttonAction,
