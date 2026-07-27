@@ -12,7 +12,6 @@ import 'snake.dart';
 import 'settings.dart';
 import 'splashscreen.dart';
 
-// --- GLOBAL STATE PROVIDERS ---
 class ThemeNotifier extends Notifier<bool> {
   static const String _boxName = 'luviasun';
   static const String _key = 'is_dark_mode';
@@ -36,22 +35,19 @@ final coordinateProvider = StateProvider<LatLng>((ref) {
   return const LatLng(18.5204, 73.8567);
 });
 
-// --- GLOBAL PRE-FETCH CACHE MATRIX ---
-// This method runs in parallel behind the splash screen animation sequence
 Future<void> preFetchWeatherTelemetry() async {
   try {
     final box = await Hive.openBox('weather_cache');
     final String todayKey = DateTime.now().toIso8601String().substring(0, 10);
     final String? cachedDate = box.get('last_fetch_day');
     final String? cachedJson = box.get('payload_string');
-
-    // If cache is valid for today, skip hitting the network entirely
     if (cachedDate == todayKey && cachedJson != null) {
       debugPrint("PRE-FETCH SYSTEM: Valid local cache verified.");
       return;
     }
 
-    debugPrint("PRE-FETCH SYSTEM: Fetching data in background behind splash screen...");
+    debugPrint(
+        "PRE-FETCH SYSTEM: Fetching data in background behind splash screen...");
     final HttpClient client = HttpClient();
     client.connectionTimeout = const Duration(seconds: 10);
 
@@ -82,12 +78,8 @@ Future<void> preFetchWeatherTelemetry() async {
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-
-  // Initialize Core Storage
   await Hive.initFlutter();
   await Hive.openBox('luviasun');
-
-  // Trigger background network fetch. It runs *while* the UI boots up.
   preFetchWeatherTelemetry();
 
   runApp(
@@ -122,7 +114,8 @@ class MainNavigationShell extends ConsumerStatefulWidget {
   const MainNavigationShell({super.key});
 
   @override
-  ConsumerState<MainNavigationShell> createState() => _MainNavigationShellState();
+  ConsumerState<MainNavigationShell> createState() =>
+      _MainNavigationShellState();
 }
 
 class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
@@ -151,7 +144,8 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
     final canvasBg = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
     final textMain = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF000000);
     final textSub = isDark ? const Color(0xFF737373) : const Color(0xFF404040);
-    final ruleBorder = isDark ? const Color(0xFF1F1F1F) : const Color(0xFFE5E5E5);
+    final ruleBorder =
+        isDark ? const Color(0xFF1F1F1F) : const Color(0xFFE5E5E5);
 
     return Scaffold(
       backgroundColor: canvasBg,
@@ -181,9 +175,12 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
                     height: 52,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isSelected ? textMain.withOpacity(0.05) : Colors.transparent,
+                      color: isSelected
+                          ? textMain.withOpacity(0.05)
+                          : Colors.transparent,
                       border: index < _navigationLabels.length - 1
-                          ? Border(right: BorderSide(color: ruleBorder, width: 0.8))
+                          ? Border(
+                              right: BorderSide(color: ruleBorder, width: 0.8))
                           : null,
                     ),
                     child: Text(
@@ -191,7 +188,8 @@ class _MainNavigationShellState extends ConsumerState<MainNavigationShell> {
                       style: TextStyle(
                         color: isSelected ? textMain : textSub,
                         fontSize: 9,
-                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.bold,
+                        fontWeight:
+                            isSelected ? FontWeight.w900 : FontWeight.bold,
                         letterSpacing: 0.05,
                       ),
                     ),
